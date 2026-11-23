@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -273,7 +274,6 @@ public partial class MainWindow : Window
         (_cfg.Lang == "en" ? LangEn : LangTr).IsChecked = true;
         TbHex.Text = _cfg.Accent;
         SyncSwatches();
-        SyncWheel();
         TbDelay.Text = _cfg.ButtonDelaySec.ToString();
         HotkeyChip.Text = HotkeyText;
         ChkAutoUpdate.IsChecked = _cfg.AutoUpdateCheck;
@@ -1236,9 +1236,11 @@ public partial class MainWindow : Window
 
     // ───────────────────────── Görünüm ve dil ─────────────────────────
 
+    ToggleButton? _customSwatch;
+
     void BuildSwatches()
     {
-        foreach (var (name, hex) in Theme.Presets)
+        foreach (var (key, hex) in Theme.Presets)
         {
             Theme.TryParse(hex, out var c);
             var rb = new RadioButton
@@ -1247,78 +1249,148 @@ public partial class MainWindow : Window
                 GroupName = "Accent",
                 Tag = hex,
                 Background = new SolidColorBrush(c),
-                ToolTip = name,
             };
-            System.Windows.Automation.AutomationProperties.SetName(rb, name);
+            rb.SetBinding(FrameworkElement.ToolTipProperty, new System.Windows.Data.Binding($"[{key}]") { Source = Loc.Instance });
+            System.Windows.Automation.AutomationProperties.SetName(rb, Loc.T(key));
             rb.Checked += (_, _) =>
             {
                 if (_ready) SetAccent(hex);
             };
             SwatchHost.Children.Add(rb);
         }
+
+        // son yuvarlak: özel renk (çarkı açar)
+        _customSwatch = new ToggleButton { Style = (Style)FindResource("WheelSwatch"), Tag = ColorWheel.SharedWheel };
+        _customSwatch.SetBinding(FrameworkElement.ToolTipProperty, new System.Windows.Data.Binding("[accent_custom]") { Source = Loc.Instance });
+        System.Windows.Automation.AutomationProperties.SetName(_customSwatch, "Custom color");
+        System.Windows.Automation.AutomationProperties.SetAutomationId(_customSwatch, "CustomSwatchBtn");
+        _customSwatch.Click += CustomSwatch_Click;
+        SwatchHost.Children.Add(_customSwatch);
     }
 
+    /// <summary>Hazır renklerden biri seçiliyse onu işaretler; değilse özel renk yuvarlağı seçili görünür ve rengi taşır.</summary>
     void SyncSwatches()
     {
-        foreach (RadioButton rb in SwatchHost.Children)
-            rb.IsChecked = string.Equals((string)rb.Tag, _cfg.Accent, StringComparison.OrdinalIgnoreCase);
+        var isPreset = false;
+        foreach (var child in SwatchHost.Children)
+        {
+            if (child is not RadioButton rb) continue;
+            var match = string.Equals((string)rb.Tag, _cfg.Accent, StringComparison.OrdinalIgnoreCase);
+            rb.IsChecked = match;
+            isPreset |= match;
+        }
+        UpdateCustomSwatch(isPreset);
+    }
+
+    void UpdateCustomSwatch(bool? isPreset = null)
+    {
+        if (_customSwatch == null) return;
+        var preset = isPreset ?? Theme.Presets.Any(p => string.Equals(p.Hex, _cfg.Accent, StringComparison.OrdinalIgnoreCase));
+        var pickerOpen = AccentPicker.Visibility == Visibility.Visible;
+        _customSwatch.IsChecked = !preset || pickerOpen;
+        _customSwatch.Background = !preset && Theme.TryParse(_cfg.Accent, out var c) ? new SolidColorBrush(c) : Brushes.Transparent;
     }
 
     void SetAccent(string hex)
     {
         _cfg.Accent = hex.ToUpperInvariant();
-        TbHex.Text = _cfg.Accent;
         Theme.Apply(_cfg.Dark, _cfg.Accent);
         _cfg.Save();
-        SyncWheel();
+        CloseAccentPicker();
+        SyncSwatches();
     }
 
-    // ── renk çarkı ──
+    // ── özel renk çarkı: seçim yalnızca önizlenir, "Uygula" ile uygulanır ──
 
-    bool _syncingWheel;
-    long _lastWheelApply;
+    bool _syncingPick;
+    int _pickerVersion;
 
-    /// <summary>Çark ve parlaklık kaydırıcısını kayıtlı vurgu rengine eşler (olay tetiklemeden).</summary>
-    void SyncWheel()
+    void CustomSwatch_Click(object sender, RoutedEventArgs e)
     {
-        if (!Theme.TryParse(_cfg.Accent, out var c)) return;
-        _syncingWheel = true;
-        AccentWheel.SetColor(c);
-        AccentBright.Value = Math.Round(AccentWheel.Value * 100);
-        _syncingWheel = false;
+        if (AccentPicker.Visibility == Visibility.Visible) CloseAccentPicker();
+        else OpenAccentPicker();
+    }
+
+    void OpenAccentPicker()
+    {
+        Theme.TryParse(_cfg.Accent, out var current);
+        SetPick(current, updateWheel: true, updateHex: true);
+        HexNote.Text = Loc.T("hex_note");
+
+        _pickerVersion++;
+        AccentPicker.BeginAnimation(OpacityProperty, null);
+        AccentPicker.Opacity = SystemParameters.ClientAreaAnimation ? 0 : 1;
+        AccentPicker.Visibility = Visibility.Visible;
+        if (SystemParameters.ClientAreaAnimation)
+        {
+            var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
+            var move = new TranslateTransform(0, -8);
+            AccentPicker.RenderTransform = move;
+            AccentPicker.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(200)) { EasingFunction = ease });
+            move.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(-8, 0, TimeSpan.FromMilliseconds(240)) { EasingFunction = ease });
+        }
+        UpdateCustomSwatch();
+    }
+
+    void CloseAccentPicker()
+    {
+        if (AccentPicker.Visibility != Visibility.Visible) { UpdateCustomSwatch(); return; }
+        var version = ++_pickerVersion;
+        if (!SystemParameters.ClientAreaAnimation)
+        {
+            AccentPicker.Visibility = Visibility.Collapsed;
+            UpdateCustomSwatch();
+            return;
+        }
+        var fade = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(110));
+        fade.Completed += (_, _) =>
+        {
+            if (version != _pickerVersion) return;           // arada yeniden açıldıysa kapatma
+            AccentPicker.Visibility = Visibility.Collapsed;
+            AccentPicker.BeginAnimation(OpacityProperty, null);
+            AccentPicker.Opacity = 1;
+            UpdateCustomSwatch();
+        };
+        AccentPicker.BeginAnimation(OpacityProperty, fade);
+        UpdateCustomSwatch();
+    }
+
+    void PickerCancel_Click(object sender, RoutedEventArgs e) => CloseAccentPicker();
+
+    /// <summary>Seçimi günceller; hangi parçadan geldiğine göre diğerlerini eşler (döngü olmasın diye).</summary>
+    void SetPick(Color c, bool updateWheel, bool updateHex)
+    {
+        _syncingPick = true;
+        if (updateWheel)
+        {
+            AccentWheel.SetColor(c);
+            AccentBright.Value = Math.Round(AccentWheel.Value * 100);
+        }
+        if (updateHex) TbHex.Text = $"#{c.R:X2}{c.G:X2}{c.B:X2}";
+        PickPreview.Background = new SolidColorBrush(c);
+        _syncingPick = false;
     }
 
     void Wheel_ColorChanged(Color c, bool final)
     {
-        if (_syncingWheel || !_ready) return;
-        var hex = $"#{c.R:X2}{c.G:X2}{c.B:X2}";
-        _cfg.Accent = hex;
-        TbHex.Text = hex;
-
-        // sürüklerken tüm arayüzü her pikselde yeniden boyamamak için sınırla
-        var now = Environment.TickCount64;
-        if (final || now - _lastWheelApply >= 45)
-        {
-            _lastWheelApply = now;
-            Theme.Apply(_cfg.Dark, hex);
-        }
-        if (final)
-        {
-            _cfg.Save();
-            SyncSwatches();
-        }
+        if (_syncingPick || !_ready) return;
+        SetPick(c, updateWheel: false, updateHex: true);
     }
 
     void Bright_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
-        if (_syncingWheel || !_ready) return;
+        if (_syncingPick || !_ready) return;
         AccentWheel.Value = e.NewValue / 100;
-        Wheel_ColorChanged(AccentWheel.Color, final: false);
+        SetPick(AccentWheel.Color, updateWheel: false, updateHex: true);
     }
 
-    void Bright_Released(object sender, MouseButtonEventArgs e)
+    void Hex_TextChanged(object sender, TextChangedEventArgs e)
     {
-        Dispatcher.BeginInvoke(() => Wheel_ColorChanged(AccentWheel.Color, final: true), DispatcherPriority.Input);
+        if (_syncingPick || !_ready) return;
+        var text = TbHex.Text.Trim();
+        if (!text.StartsWith('#')) text = "#" + text;
+        if (text.Length == 7 && Theme.TryParse(text, out var c))
+            SetPick(c, updateWheel: true, updateHex: false);   // yazarken imleç yerinde kalsın
     }
 
     void Theme_Checked(object sender, RoutedEventArgs e)

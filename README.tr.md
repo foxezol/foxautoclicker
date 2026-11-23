@@ -34,7 +34,7 @@
 - Yeni kullanıcılar için yönlendirmeli **tur**: ekranı karartır, her bölümü çerçeveler ve bir cümleyle anlatır. İstediğiniz zaman Ayarlar'dan yeniden başlatabilirsiniz
 - **Profiller**: fare ve klavye ayarlarını birlikte kaydedin, tek tıkla yükleyin
 - Aynı kontrolleri ve sayaçları taşıyan, her zaman üstte duran küçük **mini pencere**
-- Koyu ve açık tema, varsayılan olarak lavanta vurgu; yedi vurgu rengi daha, **renk çarkı** ya da kendi `#RRGGBB` renginiz. Pencere ve görev çubuğu simgesi vurguyu izler
+- Koyu ve açık tema, varsayılan olarak lavanta vurgu, turuncu ya da **renk çarkından** veya `#RRGGBB` kodundan istediğiniz renk. Pencere ve görev çubuğu simgesi vurguyu izler
 - Türkçe ve İngilizce
 - GitHub Releases üzerinden **otomatik güncelleme**; *Şimdi güncelle / Daha sonra* sorusuyla
 - Ayarlar'da **Ayarları sıfırla** ve **Uygulamayı kaldır** düğmeleri
@@ -95,10 +95,10 @@ Yükleyiciyi derlemek için ayrıca [Inno Setup 6](https://jrsoftware.org/isinfo
 
 ```powershell
 dotnet publish -c Release -r win-x64 --self-contained -p:PublishReadyToRun=true -o publish
-ISCC.exe /DMyAppVersion=0.3.3 installer\FoxClicker.iss     # Releases\FoxClicker-Setup-0.3.3.exe
+ISCC.exe /DMyAppVersion=0.3.4 installer\FoxClicker.iss     # Releases\FoxClicker-Setup-0.3.4.exe
 ```
 
-Taşınabilir zip için `publish` klasörünün içeriğini `FoxClicker-Portable-0.3.3.zip` olarak sıkıştırın. İki dosyayı `v0.3.3` etiketli bir GitHub sürümüne ekleyin; kurulu kopyalar güncellemeyi sürümdeki `*Setup*.exe` dosyasından bulur.
+Taşınabilir zip için `publish` klasörünün içeriğini `FoxClicker-Portable-0.3.4.zip` olarak sıkıştırın. İki dosyayı `v0.3.4` etiketli bir GitHub sürümüne ekleyin; kurulu kopyalar güncellemeyi sürümdeki `*Setup*.exe` dosyasından bulur.
 
 ## Emeği geçenler
 

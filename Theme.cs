@@ -13,10 +13,10 @@ public static class Theme
     public static Color AccentColor { get; private set; } = Colors.White;
     public static Color AccentForegroundColor { get; private set; } = Colors.Black;
 
-    public static readonly (string Name, string Hex)[] Presets =
+    /// <summary>Hazır vurgu renkleri (dil anahtarı, hex). Gerisi "özel renk" çarkından seçilir.</summary>
+    public static readonly (string Key, string Hex)[] Presets =
     {
-        ("Lavanta", "#C9A0DC"), ("Tilki", "#FF6A1F"), ("Mavi", "#3B82F6"), ("Camgöbeği", "#14B8C7"), ("Yeşil", "#22B573"),
-        ("Sarı", "#F2B705"), ("Kırmızı", "#E5484D"), ("Mor", "#9E20E6"),
+        ("accent_lavender", "#C9A0DC"), ("accent_orange", "#FF6A1F"),
     };
 
     sealed record Pal(string Bg, string Card, string Divider, string Fg, string Muted,

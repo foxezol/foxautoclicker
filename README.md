@@ -34,7 +34,7 @@ English · [Türkçe](README.tr.md)
 - A guided **tour** for new users: it dims the screen, frames each part and explains it in a sentence. Restart it any time from Settings
 - **Profiles**: save mouse and keyboard settings together, load them in one click
 - A small always-on-top **mini window** with the same controls and counters
-- Dark and light themes, a lavender accent by default, seven more accent colors, a **color wheel** or your own `#RRGGBB`. The window and taskbar icon follow the accent
+- Dark and light themes, a lavender accent by default, orange, or **any color you like** from a color wheel or a `#RRGGBB` code. The window and taskbar icon follow the accent
 - English and Turkish
 - **Automatic updates** from GitHub Releases, with an *Update now / Later* prompt
 - **Reset settings** and **Uninstall** buttons in Settings
@@ -95,10 +95,10 @@ To build the installer you also need [Inno Setup 6](https://jrsoftware.org/isinf
 
 ```powershell
 dotnet publish -c Release -r win-x64 --self-contained -p:PublishReadyToRun=true -o publish
-ISCC.exe /DMyAppVersion=0.3.3 installer\FoxClicker.iss     # Releases\FoxClicker-Setup-0.3.3.exe
+ISCC.exe /DMyAppVersion=0.3.4 installer\FoxClicker.iss     # Releases\FoxClicker-Setup-0.3.4.exe
 ```
 
-For the portable zip, zip the contents of `publish` as `FoxClicker-Portable-0.3.3.zip`. Attach both files to a GitHub release tagged `v0.3.3`; installed copies find the update through the release's `*Setup*.exe` asset.
+For the portable zip, zip the contents of `publish` as `FoxClicker-Portable-0.3.4.zip`. Attach both files to a GitHub release tagged `v0.3.4`; installed copies find the update through the release's `*Setup*.exe` asset.
 
 ## Credits
 

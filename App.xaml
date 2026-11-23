@@ -393,6 +393,34 @@
             </Setter>
         </Style>
 
+        <!-- Özel renk yuvarlağı: çark görüntüsü; seçiliyken halka ve ortada seçili renk -->
+        <Style x:Key="WheelSwatch" TargetType="ToggleButton">
+            <Setter Property="Width" Value="34"/>
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="Margin" Value="0,0,6,6"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRing}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Grid Background="Transparent">
+                            <Ellipse x:Name="Halo" StrokeThickness="2" Stroke="{DynamicResource Foreground}" Visibility="Collapsed"/>
+                            <Ellipse Margin="4">
+                                <Ellipse.Fill>
+                                    <ImageBrush ImageSource="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}" Stretch="Fill"/>
+                                </Ellipse.Fill>
+                            </Ellipse>
+                            <Ellipse x:Name="Dot" Width="12" Height="12" Fill="{TemplateBinding Background}"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True"><Setter TargetName="Halo" Property="Visibility" Value="Visible"/></Trigger>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Halo" Property="Visibility" Value="Visible"/></Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- Aç/kapat düğmesi (segment): tıklayınca açılır, tekrar tıklayınca kapanır; birden fazlası açık olabilir -->
         <Style x:Key="SegmentToggle" TargetType="ToggleButton">
             <Setter Property="Foreground" Value="{DynamicResource Foreground}"/>

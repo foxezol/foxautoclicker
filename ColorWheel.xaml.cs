@@ -20,10 +20,15 @@ public partial class ColorWheel : UserControl
     /// <summary>(renk, sürükleme bitti mi). Yalnızca kullanıcı etkileşiminde tetiklenir.</summary>
     public event Action<Color, bool>? ColorChanged;
 
+    static WriteableBitmap? _shared;
+
+    /// <summary>Çark görüntüsü (özel renk düğmesi de bunu kullanır).</summary>
+    public static ImageSource SharedWheel => _shared ??= BuildWheel();
+
     public ColorWheel()
     {
         InitializeComponent();
-        WheelImage.Source = BuildWheel();
+        WheelImage.Source = SharedWheel;
         SizeChanged += (_, _) => UpdateThumb();
         UpdateThumb();
     }
