@@ -15,7 +15,7 @@
 ## Özellikler
 
 **Fare**
-- Sol, orta ya da sağ düğme; tek tık, çift tık ya da **basılı tutma**
+- Sol, orta ve sağ düğme: istediğiniz kombinasyonu seçin, birlikte basılır. Tek tık, çift tık ya da **basılı tutma**
 - Saatten milisaniyeye aralık; **Hızlı / Normal / Yavaş** ön ayarları (50 ms, 250 ms, 1 sn) ya da istediğiniz özel değer
 - Ritmi doğal göstermek için isteğe bağlı rastgele sapma
 - Durdurulana kadar ya da belirli sayıda tekrar
@@ -28,19 +28,20 @@
 - Fareyle aynı aralık ve tekrar seçenekleri
 
 **Diğerleri**
-- Başka bir uygulamadayken de çalışan tek bir **başlat/durdur kısayolu** (varsayılan F6, değiştirilebilir)
+- Başka bir uygulamadayken de çalışan tek bir **başlat/durdur kısayolu** (varsayılan F6; ilk açılışta uygulama onaylamanızı ya da değiştirmenizi ister)
 - Düğmeyle başlatırken, imleci hedefe götürebilmeniz için görünür bir **geri sayım** (iptal edilebilir)
-- Çalıştığını kulaktan anlamanız için kısa **başlat ve durdur sesleri**
+- Beş stilde **başlat ve durdur sesi** (Yumuşak, Klik, Dijital, Kristal, Pop); önizleme düğmesi ve ses düzeyi kaydırıcısıyla. Çalıştığını kulaktan anlarsınız
 - **Profiller**: fare ve klavye ayarlarını birlikte kaydedin, tek tıkla yükleyin
 - Aynı kontrolleri ve sayaçları taşıyan, her zaman üstte duran küçük **mini pencere**
-- Koyu ve açık tema, yedi vurgu rengi ya da kendi `#RRGGBB` renginiz
+- Koyu ve açık tema, varsayılan olarak lavanta vurgu; yedi vurgu rengi daha ya da kendi `#RRGGBB` renginiz. Pencere ve görev çubuğu simgesi vurguyu izler
 - Türkçe ve İngilizce
 - GitHub Releases üzerinden **otomatik güncelleme**; *Şimdi güncelle / Daha sonra* sorusuyla
 
 <div align="center">
 <img src="docs/screenshots/tr-keyboard-recording.png" alt="Tuş kaydı" width="400">
 <img src="docs/screenshots/tr-profiles.png" alt="Profiller" width="400">
-<img src="docs/screenshots/tr-settings.png" alt="Ayarlar" width="400">
+<img src="docs/screenshots/tr-settings-sounds.png" alt="Ses ayarları" width="400">
+<img src="docs/screenshots/tr-about.png" alt="Hakkında" width="400">
 <img src="docs/screenshots/tr-mini.png" alt="Mini pencere" width="260">
 </div>
 
@@ -50,8 +51,8 @@
 
 | Dosya | Nedir |
 |---|---|
-| `FoxClicker-win-Setup.exe` | Yükleyici. Kullanıcınıza kurar (yönetici izni gerekmez), kısayollar ekler ve kendini güncel tutar. |
-| `FoxClicker-win-Portable.zip` | Taşınabilir. İstediğiniz yere açın, `FoxClicker.exe`'yi çalıştırın. Güncelleme burada da çalışır. |
+| `FoxClicker-Setup-x.y.z.exe` | Kurulum sihirbazı. Kurulum klasörünü, Başlat Menüsü klasörünü ve masaüstü kısayolu eklenip eklenmeyeceğini seçersiniz. Son sayfada *FoxClicker'ı çalıştır* ve *FoxClicker'ın GitHub sayfasını aç* kutuları işaretli gelir; istemediğinizi kaldırın. "Tüm kullanıcılar için" kurulumu seçmedikçe yönetici izni gerekmez. |
+| `FoxClicker-Portable-x.y.z.zip` | Taşınabilir. İstediğiniz yere açın, `FoxAutoClicker.exe`'yi çalıştırın. |
 
 Windows 10 ya da 11 (64 bit). .NET çalışma zamanı pakete dahil, ayrıca bir şey kurmanız gerekmez.
 
@@ -68,7 +69,10 @@ Ayarlar `%AppData%\FoxAutoClicker\settings.json` dosyasında saklanır.
 
 ## Güncellemeler
 
-**Ayarlar → Güncellemeler** bölümünden açılışta otomatik kontrolü açabilir ya da elle kontrol edebilirsiniz. Yeni sürüm yayımlanınca FoxClicker şimdi mi yoksa daha sonra mı güncellemek istediğinizi sorar. Güncelleme yeni sürümü indirir ve uygulamayı yeniden başlatır.
+**Ayarlar → Güncellemeler** bölümünden açılışta otomatik kontrolü açabilir ya da elle kontrol edebilirsiniz. Yeni sürüm yayımlanınca FoxClicker şimdi mi yoksa daha sonra mı güncellemek istediğinizi sorar.
+
+- **Setup ile kurulduysa:** *Şimdi güncelle* yeni yükleyiciyi indirip sessizce çalıştırır, sonra FoxClicker yeniden açılır.
+- **Taşınabilir sürümde:** uygulama yeni sürümü haber verir, *Sürüm sayfasını aç* sizi indirmeye götürür.
 
 ## Oyunlar hakkında
 
@@ -84,15 +88,14 @@ cd foxautoclicker
 dotnet run -c Release
 ```
 
-Yükleyici ve taşınabilir zip için ([Velopack](https://velopack.io)):
+Yükleyiciyi derlemek için ayrıca [Inno Setup 6](https://jrsoftware.org/isinfo.php) gerekir:
 
 ```powershell
 dotnet publish -c Release -r win-x64 --self-contained -p:PublishReadyToRun=true -o publish
-dotnet tool install -g vpk
-vpk pack --packId FoxClicker --packVersion 0.3.0 --packDir publish --mainExe FoxAutoClicker.exe --icon Assets/app.ico --runtime win-x64 --outputDir Releases
+ISCC.exe /DMyAppVersion=0.3.1 installer\FoxClicker.iss     # Releases\FoxClicker-Setup-0.3.1.exe
 ```
 
-`Releases/` içindeki her şeyi `v0.3.0` etiketli bir GitHub sürümüne yükleyin; böylece kurulu kopyalar güncellemeyi bulabilir.
+Taşınabilir zip için `publish` klasörünün içeriğini `FoxClicker-Portable-0.3.1.zip` olarak sıkıştırın. İki dosyayı `v0.3.1` etiketli bir GitHub sürümüne ekleyin; kurulu kopyalar güncellemeyi sürümdeki `*Setup*.exe` dosyasından bulur.
 
 ## Emeği geçenler
 

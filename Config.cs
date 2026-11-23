@@ -38,7 +38,8 @@ public sealed class Timing
 public sealed class MouseConfig
 {
     public bool Enabled { get; set; } = true;
-    public int Button { get; set; }          // 0 sol, 1 orta, 2 sağ
+    public int Button { get; set; }          // eski ayar (0 sol, 1 orta, 2 sağ); Buttons'a taşınır
+    public int Buttons { get; set; } = 1;    // bit 0 sol, bit 1 orta, bit 2 sağ: birden fazlası aynı anda basılır
     public bool Double { get; set; }
     public bool Hold { get; set; }
     public bool Fixed { get; set; }
@@ -68,7 +69,10 @@ public sealed class Config
     public List<Profile> Profiles { get; set; } = new();
     public double? MiniX { get; set; }
     public double? MiniY { get; set; }
-    public int Rev { get; set; } = 2;
+    public int Rev { get; set; } = 3;
+    public bool FirstRunDone { get; set; }
+    public int SoundVariant { get; set; }
+    public int SoundVolume { get; set; } = 70;
     public bool AutoUpdateCheck { get; set; } = true;
     public bool Sounds { get; set; } = true;
     public bool Dark { get; set; } = true;
@@ -95,7 +99,17 @@ public sealed class Config
             if (File.Exists(PathOnDisk))
             {
                 var c = JsonSerializer.Deserialize<Config>(File.ReadAllText(PathOnDisk)) ?? new Config();
-                if (c.Rev < 2) { c.Accent = Theme.DefaultAccent; c.Rev = 2; } // yeni görünüm: yeni varsayılan vurgu
+                if (c.Rev < 2) { c.Accent = Theme.DefaultAccent; c.Rev = 2; }
+                if (c.Rev < 3)
+                {
+                    // 0.3.1: yeni varsayılan vurgu (lavanta) ve çoklu fare düğmesi
+                    if (string.Equals(c.Accent, "#FF6A1F", StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(c.Accent, "#9E20E6", StringComparison.OrdinalIgnoreCase))
+                        c.Accent = Theme.DefaultAccent;
+                    c.Mouse.Buttons = 1 << Math.Clamp(c.Mouse.Button, 0, 2);
+                    foreach (var p in c.Profiles) p.Mouse.Buttons = 1 << Math.Clamp(p.Mouse.Button, 0, 2);
+                    c.Rev = 3;
+                }
                 return c;
             }
         }

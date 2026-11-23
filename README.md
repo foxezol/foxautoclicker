@@ -15,7 +15,7 @@ English · [Türkçe](README.tr.md)
 ## Features
 
 **Mouse**
-- Left, middle or right button; single click, double click or **hold**
+- Left, middle and right buttons: pick any combination and they are pressed together. Single click, double click or **hold**
 - Intervals from hours down to milliseconds, with **Fast / Normal / Slow** presets (50 ms, 250 ms, 1 s) or any custom value
 - Optional random jitter so the rhythm feels natural
 - Repeat until stopped, or a fixed number of times
@@ -28,19 +28,20 @@ English · [Türkçe](README.tr.md)
 - Same interval and repeat options as the mouse
 
 **Everything else**
-- One global **start/stop hotkey** (F6 by default, changeable) that works while another app is in front
+- One global **start/stop hotkey** (F6 by default; the app asks you to confirm or change it on first launch) that works while another app is in front
 - A visible **countdown** (with cancel) when you start from the button, so you can move the cursor first
-- Short **start and stop sounds**, so you can hear that it is working
+- **Start and stop sounds** in five styles (Soft, Click, Digital, Crystal, Pop) with a preview button and a volume slider, so you can hear that it is working
 - **Profiles**: save mouse and keyboard settings together, load them in one click
 - A small always-on-top **mini window** with the same controls and counters
-- Dark and light themes, seven accent colors or your own `#RRGGBB`
+- Dark and light themes, a lavender accent by default, seven more accent colors or your own `#RRGGBB`. The window and taskbar icon follow the accent
 - English and Turkish
-- **Automatic updates** from GitHub Releases, with a *Update now / Later* prompt
+- **Automatic updates** from GitHub Releases, with an *Update now / Later* prompt
 
 <div align="center">
 <img src="docs/screenshots/en-keyboard-recording.png" alt="Key recording" width="400">
 <img src="docs/screenshots/en-profiles.png" alt="Profiles" width="400">
-<img src="docs/screenshots/en-settings.png" alt="Settings" width="400">
+<img src="docs/screenshots/en-settings-sounds.png" alt="Sound settings" width="400">
+<img src="docs/screenshots/en-about.png" alt="About" width="400">
 <img src="docs/screenshots/en-mini.png" alt="Mini window" width="260">
 </div>
 
@@ -50,8 +51,8 @@ Download one of these from the [latest release](https://github.com/foxezol/foxau
 
 | File | What it is |
 |---|---|
-| `FoxClicker-win-Setup.exe` | Installer. Installs for your user (no admin needed), adds shortcuts, and keeps itself updated. |
-| `FoxClicker-win-Portable.zip` | Portable. Unzip anywhere and run `FoxClicker.exe`. Updates work here too. |
+| `FoxClicker-Setup-x.y.z.exe` | Installer wizard. Choose the install folder, the Start Menu folder and whether to add a desktop shortcut. On the last page you can tick *Launch FoxClicker* and *Open the FoxClicker page on GitHub* (both ticked by default, untick what you don't want). No admin rights needed unless you choose an all-users install. |
+| `FoxClicker-Portable-x.y.z.zip` | Portable. Unzip anywhere and run `FoxAutoClicker.exe`. |
 
 Windows 10 or 11 (64-bit). The .NET runtime is bundled, so there is nothing else to install.
 
@@ -68,7 +69,10 @@ Settings are stored in `%AppData%\FoxAutoClicker\settings.json`.
 
 ## Updates
 
-Under **Settings → Updates** you can turn on the automatic check at startup, or check manually. When a new version is out, FoxClicker asks whether to update now or later. Updating downloads the new version and restarts the app.
+Under **Settings → Updates** you can turn on the automatic check at startup, or check manually. When a new version is out, FoxClicker asks whether to update now or later.
+
+- **Installed with Setup:** *Update now* downloads the new installer and runs it silently, then FoxClicker starts again.
+- **Portable:** the app can tell you about a new version, and *Open release page* takes you to the download.
 
 ## A note on games
 
@@ -84,15 +88,14 @@ cd foxautoclicker
 dotnet run -c Release
 ```
 
-To build the installer and portable zip ([Velopack](https://velopack.io)):
+To build the installer you also need [Inno Setup 6](https://jrsoftware.org/isinfo.php):
 
 ```powershell
 dotnet publish -c Release -r win-x64 --self-contained -p:PublishReadyToRun=true -o publish
-dotnet tool install -g vpk
-vpk pack --packId FoxClicker --packVersion 0.3.0 --packDir publish --mainExe FoxAutoClicker.exe --icon Assets/app.ico --runtime win-x64 --outputDir Releases
+ISCC.exe /DMyAppVersion=0.3.1 installer\FoxClicker.iss     # Releases\FoxClicker-Setup-0.3.1.exe
 ```
 
-Upload everything in `Releases/` to a GitHub release tagged `v0.3.0` so installed copies can find the update.
+For the portable zip, zip the contents of `publish` as `FoxClicker-Portable-0.3.1.zip`. Attach both files to a GitHub release tagged `v0.3.1`; installed copies find the update through the release's `*Setup*.exe` asset.
 
 ## Credits
 

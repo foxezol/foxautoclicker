@@ -82,15 +82,36 @@ public partial class MainWindow : Window
         Closed += (_, _) => Application.Current.Shutdown();
 
         _ready = true;
-        Sounds.Enabled = _cfg.Sounds;
+        ApplySoundConfig();
+        UpdateIcon();
+        Theme.Changed += UpdateIcon;
         Refresh();
 
         Loaded += async (_, _) =>
         {
+            if (!_cfg.FirstRunDone)
+            {
+                await Task.Delay(450);
+                ShowOverlay(HotkeyOverlay, HotkeyCard, HotkeyStack);
+                FocusAfterEntrance(HotkeyOkBtn);
+                return;                                   // ilk açılışta güncelleme penceresi araya girmesin
+            }
             if (!_cfg.AutoUpdateCheck) return;
-            await Task.Delay(1200);          // açılış sakinleşsin
+            await Task.Delay(1200);                       // açılış sakinleşsin
             await CheckUpdatesAsync(manual: false);
         };
+    }
+
+    void UpdateIcon()
+    {
+        Icon = AppIcon.Create(Theme.AccentColor, Theme.AccentForegroundColor);
+        if (_mini != null) _mini.Icon = Icon;
+    }
+
+    void ApplySoundConfig()
+    {
+        Sounds.Enabled = _cfg.Sounds;
+        Sounds.Configure(_cfg.SoundVariant, _cfg.SoundVolume);
     }
 
     // ───────────────────────── Kısayol ─────────────────────────
@@ -140,6 +161,11 @@ public partial class MainWindow : Window
         if (!_cfg.Mouse.Enabled && !_cfg.Key.Enabled)
         {
             Notice(Loc.T("notice_none"));
+            return;
+        }
+        if (_cfg.Mouse.Enabled && _cfg.Mouse.Buttons == 0)
+        {
+            Notice(Loc.T("notice_nobutton"));
             return;
         }
         if (_cfg.Key.Enabled && !_cfg.Mouse.Enabled && _cfg.Key.Keys.Count == 0)
@@ -218,7 +244,9 @@ public partial class MainWindow : Window
     {
         var m = _cfg.Mouse;
         ChkMouse.IsChecked = m.Enabled;
-        (m.Button switch { 1 => MbMiddle, 2 => MbRight, _ => MbLeft }).IsChecked = true;
+        MbLeft.IsChecked = (m.Buttons & 1) != 0;
+        MbMiddle.IsChecked = (m.Buttons & 2) != 0;
+        MbRight.IsChecked = (m.Buttons & 4) != 0;
         (m.Hold ? MtHold : m.Double ? MtDouble : MtSingle).IsChecked = true;
         (m.Fixed ? PosFixed : PosCursor).IsChecked = true;
         TbX.Text = m.X.ToString();
@@ -246,13 +274,18 @@ public partial class MainWindow : Window
         HotkeyChip.Text = HotkeyText;
         ChkAutoUpdate.IsChecked = _cfg.AutoUpdateCheck;
         ChkSounds.IsChecked = _cfg.Sounds;
+        SoundRadio(_cfg.SoundVariant).IsChecked = true;
+        SoundVolume.Value = _cfg.SoundVolume;
+        SoundVolumeText.Text = $"{_cfg.SoundVolume}%";
     }
+
+    RadioButton SoundRadio(int variant) => variant switch { 1 => SndClick, 2 => SndDigital, 3 => SndCrystal, 4 => SndPop, _ => SndSoft };
 
     void ReadUi()
     {
         var m = _cfg.Mouse;
         m.Enabled = ChkMouse.IsChecked == true;
-        m.Button = MbMiddle.IsChecked == true ? 1 : MbRight.IsChecked == true ? 2 : 0;
+        m.Buttons = (MbLeft.IsChecked == true ? 1 : 0) | (MbMiddle.IsChecked == true ? 2 : 0) | (MbRight.IsChecked == true ? 4 : 0);
         m.Double = MtDouble.IsChecked == true;
         m.Hold = MtHold.IsChecked == true;
         m.Fixed = PosFixed.IsChecked == true;
@@ -267,7 +300,9 @@ public partial class MainWindow : Window
         _cfg.ButtonDelaySec = Num(TbDelay.Text, 30);
         _cfg.AutoUpdateCheck = ChkAutoUpdate.IsChecked == true;
         _cfg.Sounds = ChkSounds.IsChecked == true;
-        Sounds.Enabled = _cfg.Sounds;
+        _cfg.SoundVolume = (int)SoundVolume.Value;
+        _cfg.SoundVariant = SndClick.IsChecked == true ? 1 : SndDigital.IsChecked == true ? 2 : SndCrystal.IsChecked == true ? 3 : SndPop.IsChecked == true ? 4 : 0;
+        ApplySoundConfig();
     }
 
     static int Num(string s, int max) => int.TryParse(s, out var n) ? Math.Clamp(n, 0, max) : 0;
@@ -370,6 +405,12 @@ public partial class MainWindow : Window
 
         AddKeyBtn.Content = _captureBtn == AddKeyBtn ? Loc.T(_capturePrompt) : Loc.T("add_key");
         HotkeyBtn.Content = _captureBtn == HotkeyBtn ? Loc.T(_capturePrompt) : Loc.T("hotkey_change");
+        if (HotkeyOverlay.Visibility == Visibility.Visible)
+        {
+            HotkeyDlgChangeBtn.Content = _captureBtn == HotkeyDlgChangeBtn ? Loc.T(_capturePrompt) : Loc.T("hotkey_change");
+            HotkeyDlgKey.Text = HotkeyText;
+            HotkeyDlgMsg.Text = _hotkeyOk ? "" : Loc.F("hotkey_conflict", HotkeyText);
+        }
         HotkeyChip.Text = HotkeyText;
 
         // profiller
@@ -430,13 +471,13 @@ public partial class MainWindow : Window
     {
         AboutVersionText.Text = Loc.F("version", AppVersion);
         AboutMsg.Text = "";
-        AboutOverlay.Visibility = Visibility.Visible;
-        AboutCloseBtn.Focus();
+        ShowOverlay(AboutOverlay, AboutCard, AboutStack);
+        FocusAfterEntrance(AboutCloseBtn);
     }
 
-    void AboutOverlay_MouseDown(object sender, MouseButtonEventArgs e) => AboutOverlay.Visibility = Visibility.Collapsed;
+    void AboutOverlay_MouseDown(object sender, MouseButtonEventArgs e) => HideOverlay(AboutOverlay, AboutCard);
     void Card_MouseDown(object sender, MouseButtonEventArgs e) => e.Handled = true;   // kart içi tık katmanı kapatmasın
-    void AboutClose_Click(object sender, RoutedEventArgs e) => AboutOverlay.Visibility = Visibility.Collapsed;
+    void AboutClose_Click(object sender, RoutedEventArgs e) => HideOverlay(AboutOverlay, AboutCard);
 
     void AboutGitHub_Click(object sender, RoutedEventArgs e)
     {
@@ -468,12 +509,13 @@ public partial class MainWindow : Window
         {
             case UpdateState.Available:
                 UpdateStatus.Text = Loc.F("update_available", result.Version!);
-                UpdateText.Text = Loc.F("update_text", result.Version!);
+                UpdateText.Text = Loc.F(_updates.CanSelfUpdate ? "update_text" : "update_text_portable", result.Version!);
+                UpdateNowBtn.Content = Loc.T(_updates.CanSelfUpdate ? "update_now" : "update_open");
                 UpdateMsg.Text = "";
                 UpdateBarHost.Visibility = Visibility.Collapsed;
                 UpdateNowBtn.IsEnabled = UpdateLaterBtn.IsEnabled = true;
-                UpdateOverlay.Visibility = Visibility.Visible;
-                UpdateNowBtn.Focus();
+                ShowOverlay(UpdateOverlay, UpdateCard, UpdateStack);
+                FocusAfterEntrance(UpdateNowBtn);
                 break;
             case UpdateState.UpToDate:
                 if (manual) UpdateStatus.Text = Loc.F("update_uptodate", AppVersion);
@@ -487,10 +529,16 @@ public partial class MainWindow : Window
         }
     }
 
-    void UpdateLater_Click(object sender, RoutedEventArgs e) => UpdateOverlay.Visibility = Visibility.Collapsed;
+    void UpdateLater_Click(object sender, RoutedEventArgs e) => HideOverlay(UpdateOverlay, UpdateCard);
 
     async void UpdateNow_Click(object sender, RoutedEventArgs e)
     {
+        if (!_updates.CanSelfUpdate)
+        {
+            _updates.OpenReleasePage();                  // taşınabilir sürüm kendini güncelleyemez; sayfayı açar
+            HideOverlay(UpdateOverlay, UpdateCard);
+            return;
+        }
         _updating = true;
         UpdateNowBtn.IsEnabled = UpdateLaterBtn.IsEnabled = false;
         UpdateBarHost.Visibility = Visibility.Visible;
@@ -506,7 +554,8 @@ public partial class MainWindow : Window
             _ctl.Stop();
             ReadUi();
             _cfg.Save();
-            _updates.ApplyAndRestart();      // uygulamayı kapatır, güncelleyip yeniden açar
+            _updates.ApplyAndRestart();      // kurulum sessizce başlar
+            Application.Current.Shutdown();  // dosyalar serbest kalsın; kurulum bitince uygulama yeniden açılır
         }
         catch
         {
@@ -514,6 +563,127 @@ public partial class MainWindow : Window
             UpdateNowBtn.IsEnabled = UpdateLaterBtn.IsEnabled = true;
             _updating = false;
         }
+    }
+
+    // ───────────────────────── Katman animasyonları ─────────────────────────
+
+    readonly Dictionary<Border, int> _overlayVersion = new();
+
+    /// <summary>Katmanı açar: arka plan belirir, kart hafifçe büyüyüp yükselir, içindekiler sırayla (≈45 ms arayla) gelir.</summary>
+    void ShowOverlay(Border overlay, FrameworkElement card, Panel? stack = null)
+    {
+        _overlayVersion[overlay] = _overlayVersion.GetValueOrDefault(overlay) + 1;   // süren kapanış animasyonunu geçersiz kılar
+        overlay.BeginAnimation(OpacityProperty, null);
+        overlay.Opacity = 1;
+        overlay.Visibility = Visibility.Visible;
+        if (!SystemParameters.ClientAreaAnimation) return;
+
+        var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
+        overlay.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(170)) { EasingFunction = ease });
+
+        var scale = new ScaleTransform(0.94, 0.94);
+        var move = new TranslateTransform(0, 16);
+        card.RenderTransformOrigin = new Point(0.5, 0.5);
+        card.RenderTransform = new TransformGroup { Children = { scale, move } };
+        var span = TimeSpan.FromMilliseconds(280);
+        scale.BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(0.94, 1, span) { EasingFunction = ease });
+        scale.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(0.94, 1, span) { EasingFunction = ease });
+        move.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(16, 0, span) { EasingFunction = ease });
+
+        if (stack == null) return;
+        var i = 0;
+        foreach (UIElement child in stack.Children)
+        {
+            var shift = new TranslateTransform(0, 10);
+            child.RenderTransform = shift;
+            child.Opacity = 0;
+            var delay = TimeSpan.FromMilliseconds(90 + i * 45);
+            child.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(240)) { BeginTime = delay, EasingFunction = ease });
+            shift.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(10, 0, TimeSpan.FromMilliseconds(280)) { BeginTime = delay, EasingFunction = ease });
+            i++;
+        }
+    }
+
+    /// <summary>Odak halkası (adorner) kayan öğeye yapışmasın diye, giriş animasyonu bitince odaklar.</summary>
+    async void FocusAfterEntrance(UIElement target)
+    {
+        if (SystemParameters.ClientAreaAnimation) await Task.Delay(750);
+        if (target.IsVisible) target.Focus();
+    }
+
+    /// <summary>Kapanış daha kısa ve hafif: kart 8 px aşağı kayarak solar.</summary>
+    void HideOverlay(Border overlay, FrameworkElement card)
+    {
+        if (overlay.Visibility != Visibility.Visible) return;
+        var version = _overlayVersion[overlay] = _overlayVersion.GetValueOrDefault(overlay) + 1;
+        if (!SystemParameters.ClientAreaAnimation) { overlay.Visibility = Visibility.Collapsed; return; }
+
+        var fade = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(120));
+        fade.Completed += (_, _) =>
+        {
+            if (_overlayVersion.GetValueOrDefault(overlay) != version) return;       // arada yeniden açıldıysa dokunma
+            overlay.Visibility = Visibility.Collapsed;
+            overlay.BeginAnimation(OpacityProperty, null);
+            overlay.Opacity = 1;
+        };
+        overlay.BeginAnimation(OpacityProperty, fade);
+        if (card.RenderTransform is TransformGroup { Children.Count: 2 } g && g.Children[1] is TranslateTransform move)
+            move.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(0, 8, TimeSpan.FromMilliseconds(120)));
+    }
+
+    // ───────────────────────── İlk açılış: kısayol ─────────────────────────
+
+    void HotkeyDlgChange_Click(object sender, RoutedEventArgs e)
+    {
+        if (_capture != null) { EndCapture(); return; }
+        BeginCapture(HotkeyDlgChangeBtn, "hotkey_prompt", (key, mods) =>
+        {
+            if (IsModifier(key)) return false;
+            var vk = KeyInterop.VirtualKeyFromKey(key);
+            if (vk == 0) return false;
+            _cfg.HotkeyVk = vk;
+            _cfg.HotkeyMods = (int)mods;
+            return true;
+        });
+    }
+
+    void HotkeyOk_Click(object sender, RoutedEventArgs e)
+    {
+        if (_capture != null) EndCapture();
+        _cfg.FirstRunDone = true;
+        _cfg.Save();
+        HideOverlay(HotkeyOverlay, HotkeyCard);
+    }
+
+    // ───────────────────────── Sesler ─────────────────────────
+
+    void Sound_Checked(object sender, RoutedEventArgs e)
+    {
+        if (!_ready) return;
+        ReadUi();
+        _cfg.Save();
+        Sounds.PlayStartAlways();       // seçince hemen duyulsun
+    }
+
+    void SoundPreview_Click(object sender, RoutedEventArgs e)
+    {
+        ReadUi();
+        Sounds.Preview();
+    }
+
+    void Volume_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (SoundVolumeText != null) SoundVolumeText.Text = $"{(int)e.NewValue}%";
+    }
+
+    void Volume_Released(object sender, MouseButtonEventArgs e)
+    {
+        Dispatcher.BeginInvoke(() =>
+        {
+            ReadUi();
+            _cfg.Save();
+            Sounds.PlayStartAlways();   // bırakınca yeni düzeyi duy
+        }, DispatcherPriority.Input);
     }
 
     // ───────────────────────── Etkinleştirme kalkanı ─────────────────────────
@@ -626,10 +796,10 @@ public partial class MainWindow : Window
 
     protected override void OnPreviewKeyDown(KeyEventArgs e)
     {
-        if (e.Key == Key.Escape && !_updating)
+        if (e.Key == Key.Escape && !_updating && _capture == null)
         {
-            if (UpdateOverlay.Visibility == Visibility.Visible) { UpdateOverlay.Visibility = Visibility.Collapsed; e.Handled = true; return; }
-            if (AboutOverlay.Visibility == Visibility.Visible) { AboutOverlay.Visibility = Visibility.Collapsed; e.Handled = true; return; }
+            if (UpdateOverlay.Visibility == Visibility.Visible) { HideOverlay(UpdateOverlay, UpdateCard); e.Handled = true; return; }
+            if (AboutOverlay.Visibility == Visibility.Visible) { HideOverlay(AboutOverlay, AboutCard); e.Handled = true; return; }
         }
         if (_capture == null && !_recording) { base.OnPreviewKeyDown(e); return; }
 

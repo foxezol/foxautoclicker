@@ -72,29 +72,32 @@ public static class Native
     const uint InputMouse = 0, InputKeyboard = 1;
     const uint KeyExtended = 0x1, KeyUp = 0x2, KeyScan = 0x8;
 
-    static readonly (uint Down, uint Up)[] MouseFlags =
+    /// <summary>mask: bit 0 sol, bit 1 orta, bit 2 sağ.</summary>
+    static IEnumerable<(uint Down, uint Up)> MaskFlags(int mask)
     {
-        (0x0002, 0x0004), // sol
-        (0x0020, 0x0040), // orta
-        (0x0008, 0x0010), // sağ
-    };
+        if ((mask & 1) != 0) yield return (0x0002, 0x0004);
+        if ((mask & 2) != 0) yield return (0x0020, 0x0040);
+        if ((mask & 4) != 0) yield return (0x0008, 0x0010);
+    }
 
-    public static void MouseClick(int button, int times)
+    /// <summary>Seçili tüm düğmelere aynı anda basıp bırakır; times kez.</summary>
+    public static void MouseClick(int mask, int times)
     {
-        var (down, up) = MouseFlags[Math.Clamp(button, 0, 2)];
+        var flags = MaskFlags(mask).ToArray();
+        if (flags.Length == 0) return;
         var list = new List<INPUT>();
         for (var i = 0; i < times; i++)
         {
-            list.Add(Mouse(down));
-            list.Add(Mouse(up));
+            foreach (var f in flags) list.Add(Mouse(f.Down));
+            foreach (var f in flags) list.Add(Mouse(f.Up));
         }
         SendInput((uint)list.Count, list.ToArray(), Marshal.SizeOf<INPUT>());
     }
 
-    public static void MouseButton(int button, bool down)
+    public static void MouseButtons(int mask, bool down)
     {
-        var (d, u) = MouseFlags[Math.Clamp(button, 0, 2)];
-        SendInput(1, new[] { Mouse(down ? d : u) }, Marshal.SizeOf<INPUT>());
+        var list = MaskFlags(mask).Select(f => Mouse(down ? f.Down : f.Up)).ToArray();
+        if (list.Length > 0) SendInput((uint)list.Length, list, Marshal.SizeOf<INPUT>());
     }
 
     static INPUT Mouse(uint flags) => new() { type = InputMouse, U = new InputUnion { mi = new MOUSEINPUT { dwFlags = flags } } };
@@ -199,7 +202,7 @@ public sealed class ClickController
     int _delayMs;
     int _active;
     List<int> _held = new();
-    int _heldMouse = -1;
+    int _heldMouse;
 
     public bool IsActive { get; private set; }
     public bool IsWaiting => IsActive && _sw.ElapsedMilliseconds < _delayMs;
@@ -216,7 +219,7 @@ public sealed class ClickController
         if (IsActive) return;
         _delayMs = Math.Max(0, delaySec) * 1000;
         _active = 0;
-        _mouse = null; _key = null; _held = new(); _heldMouse = -1;
+        _mouse = null; _key = null; _held = new(); _heldMouse = 0;
 
         if (cfg.Mouse.Enabled)
         {
@@ -224,11 +227,11 @@ public sealed class ClickController
             var clicks = m.Double ? 2 : 1;
             if (m.Hold)
             {
-                _heldMouse = m.Button;
+                _heldMouse = m.Buttons;
                 _mouse = new Runner(() =>
                 {
                     if (m.Fixed) Native.SetCursorPos(m.X, m.Y);
-                    Native.MouseButton(m.Button, true);
+                    Native.MouseButtons(m.Buttons, true);
                 }, () => 1000, 1, holdAfterFirst: true);
             }
             else
@@ -236,7 +239,7 @@ public sealed class ClickController
                 _mouse = new Runner(() =>
                 {
                     if (m.Fixed) Native.SetCursorPos(m.X, m.Y);
-                    Native.MouseClick(m.Button, clicks);
+                    Native.MouseClick(m.Buttons, clicks);
                 }, t.NextDelay, t.Limit ? Math.Max(1, t.Count) : 0);
                 _mouse.Completed += OnRunnerDone;
                 _active++;
@@ -289,8 +292,8 @@ public sealed class ClickController
         _key?.Stop();
         foreach (var vk in _held) Native.Key(vk, false);
         _held = new();
-        if (_heldMouse >= 0) Native.MouseButton(_heldMouse, false);
-        _heldMouse = -1;
+        if (_heldMouse != 0) Native.MouseButtons(_heldMouse, false);
+        _heldMouse = 0;
         _sw.Stop();
     }
 }

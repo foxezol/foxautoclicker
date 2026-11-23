@@ -16,6 +16,7 @@ public partial class MiniWindow : Window
     {
         _main = main;
         InitializeComponent();
+        Icon = AppIcon.Create(Theme.AccentColor, Theme.AccentForegroundColor);
         Closing += OnClosing;
         LocationChanged += (_, _) => _main.RememberMiniPosition(Left, Top);
     }

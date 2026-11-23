@@ -6,11 +6,16 @@ namespace FoxAutoClicker;
 /// <summary>FoxFix tasarım sistemi: belirteçler ve vurgu türetme kuralları (bkz. TASARIM-SISTEMI 2.1–2.2).</summary>
 public static class Theme
 {
-    public const string DefaultAccent = "#FF6A1F";
+    public const string DefaultAccent = "#C9A0DC";
+
+    /// <summary>Tema ya da vurgu rengi değişince tetiklenir (pencere ikonları yenilensin).</summary>
+    public static event Action? Changed;
+    public static Color AccentColor { get; private set; } = Colors.White;
+    public static Color AccentForegroundColor { get; private set; } = Colors.Black;
 
     public static readonly (string Name, string Hex)[] Presets =
     {
-        ("Tilki", "#FF6A1F"), ("Mavi", "#3B82F6"), ("Camgöbeği", "#14B8C7"), ("Yeşil", "#22B573"),
+        ("Lavanta", "#C9A0DC"), ("Tilki", "#FF6A1F"), ("Mavi", "#3B82F6"), ("Camgöbeği", "#14B8C7"), ("Yeşil", "#22B573"),
         ("Sarı", "#F2B705"), ("Kırmızı", "#E5484D"), ("Mor", "#9E20E6"),
     };
 
@@ -105,5 +110,9 @@ public static class Theme
         Set("OkSoft", Mix(card, C(p.Ok), 0.08));
         Set("WarnSoft", Mix(card, C(p.Warn), 0.08));
         Set("BadSoft", Mix(card, C(p.Bad), 0.08));
+
+        AccentColor = accent;
+        AccentForegroundColor = accentFg;
+        Changed?.Invoke();
     }
 }
