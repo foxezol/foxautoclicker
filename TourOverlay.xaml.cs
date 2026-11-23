@@ -23,7 +23,7 @@ public partial class TourOverlay : UserControl
 
     IReadOnlyList<TourStep> _steps = Array.Empty<TourStep>();
     Action<string>? _goToPage;
-    Action? _finished;
+    Action<bool>? _finished;
     string? _lastPage;
     int _index;
     bool _busy;
@@ -47,7 +47,7 @@ public partial class TourOverlay : UserControl
         Loc.Instance.PropertyChanged += (_, _) => { if (IsActive) UpdateTexts(); };
     }
 
-    public void Run(IReadOnlyList<TourStep> steps, Action<string> goToPage, Action finished)
+    public void Run(IReadOnlyList<TourStep> steps, Action<string> goToPage, Action<bool> finished)
     {
         _steps = steps;
         _goToPage = goToPage;
@@ -72,7 +72,7 @@ public partial class TourOverlay : UserControl
         if (!IsActive) return false;
         switch (key)
         {
-            case Key.Escape: Finish(); return true;
+            case Key.Escape: Finish(completed: false); return true;
             case Key.Right or Key.Enter: Next(); return true;
             case Key.Left: Back(); return true;
             default: return false;
@@ -116,7 +116,7 @@ public partial class TourOverlay : UserControl
         ProgressText.Text = Loc.F("tour_progress", _index + 1, _steps.Count);
         BackBtn.Visibility = _index > 0 ? Visibility.Visible : Visibility.Collapsed;
         NextBtn.Content = Loc.T(_index == _steps.Count - 1 ? "tour_done" : "tour_next");
-        SkipBtn.ToolTip = Loc.T("tour_skip");
+        SkipTextBtn.Visibility = _index == _steps.Count - 1 ? Visibility.Collapsed : Visibility.Visible;
         for (var i = 0; i < Dots.Children.Count; i++)
             ((Ellipse)Dots.Children[i]).SetResourceReference(Shape.FillProperty, i == _index ? "Accent" : "Raised");
     }
@@ -231,7 +231,7 @@ public partial class TourOverlay : UserControl
     void Next()
     {
         if (_busy) return;
-        if (_index >= _steps.Count - 1) Finish();
+        if (_index >= _steps.Count - 1) Finish(completed: true);
         else _ = ShowStepAsync(_index + 1, first: false);
     }
 
@@ -241,7 +241,7 @@ public partial class TourOverlay : UserControl
         _ = ShowStepAsync(_index - 1, first: false);
     }
 
-    void Finish()
+    void Finish(bool completed)
     {
         if (!IsActive) return;
         void Done()
@@ -249,7 +249,7 @@ public partial class TourOverlay : UserControl
             Visibility = Visibility.Collapsed;
             BeginAnimation(OpacityProperty, null);
             Opacity = 1;
-            _finished?.Invoke();
+            _finished?.Invoke(completed);
         }
         if (!SystemParameters.ClientAreaAnimation) { Done(); return; }
         var fade = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(160));
@@ -259,5 +259,5 @@ public partial class TourOverlay : UserControl
 
     void Next_Click(object sender, RoutedEventArgs e) => Next();
     void Back_Click(object sender, RoutedEventArgs e) => Back();
-    void Skip_Click(object sender, RoutedEventArgs e) => Finish();
+    void Skip_Click(object sender, RoutedEventArgs e) => Finish(completed: false);
 }

@@ -57,6 +57,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         KeyChips.ItemsSource = _keyItems;
         BuildSwatches();
+        AccentWheel.ColorChanged += Wheel_ColorChanged;
         ApplyClickersToUi();
         ApplyAppToUi();
         ProfileList.ItemsSource = _rows;
@@ -272,6 +273,7 @@ public partial class MainWindow : Window
         (_cfg.Lang == "en" ? LangEn : LangTr).IsChecked = true;
         TbHex.Text = _cfg.Accent;
         SyncSwatches();
+        SyncWheel();
         TbDelay.Text = _cfg.ButtonDelaySec.ToString();
         HotkeyChip.Text = HotkeyText;
         ChkAutoUpdate.IsChecked = _cfg.AutoUpdateCheck;
@@ -577,10 +579,31 @@ public partial class MainWindow : Window
     void ShowOverlay(Border overlay, FrameworkElement card, Panel? stack = null)
     {
         _overlayVersion[overlay] = _overlayVersion.GetValueOrDefault(overlay) + 1;   // süren kapanış animasyonunu geçersiz kılar
+        var animate = SystemParameters.ClientAreaAnimation;
+
+        // Önceki (yarım kalmış ya da tutulan) animasyonları temizle. Temizlenmezse yazılar eski değerde takılır,
+        // sonra başa sarıp yeniden gelir: art arda açınca "gidip gelen" yazıların nedeni buydu.
         overlay.BeginAnimation(OpacityProperty, null);
-        overlay.Opacity = 1;
+        if (card.RenderTransform is TransformGroup { Children.Count: 2 } old)
+        {
+            old.Children[0].BeginAnimation(ScaleTransform.ScaleXProperty, null);
+            old.Children[0].BeginAnimation(ScaleTransform.ScaleYProperty, null);
+            old.Children[1].BeginAnimation(TranslateTransform.YProperty, null);
+        }
+        card.RenderTransform = Transform.Identity;
+        if (stack != null)
+        {
+            foreach (UIElement child in stack.Children)
+            {
+                child.BeginAnimation(OpacityProperty, null);
+                if (child.RenderTransform is TranslateTransform shiftOld) shiftOld.BeginAnimation(TranslateTransform.YProperty, null);
+                child.RenderTransform = Transform.Identity;
+                child.Opacity = animate ? 0 : 1;           // animasyon başlayana dek görünmesin
+            }
+        }
+        overlay.Opacity = animate ? 0 : 1;
         overlay.Visibility = Visibility.Visible;
-        if (!SystemParameters.ClientAreaAnimation) return;
+        if (!animate) return;
 
         var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
         overlay.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(170)) { EasingFunction = ease });
@@ -600,7 +623,6 @@ public partial class MainWindow : Window
         {
             var shift = new TranslateTransform(0, 10);
             child.RenderTransform = shift;
-            child.Opacity = 0;
             var delay = TimeSpan.FromMilliseconds(90 + i * 45);
             child.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(240)) { BeginTime = delay, EasingFunction = ease });
             shift.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(10, 0, TimeSpan.FromMilliseconds(280)) { BeginTime = delay, EasingFunction = ease });
@@ -633,6 +655,42 @@ public partial class MainWindow : Window
         overlay.BeginAnimation(OpacityProperty, fade);
         if (card.RenderTransform is TransformGroup { Children.Count: 2 } g && g.Children[1] is TranslateTransform move)
             move.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(0, 8, TimeSpan.FromMilliseconds(120)));
+    }
+
+    // ───────────────────────── Kısa bildirim ─────────────────────────
+
+    int _toastVersion;
+
+    /// <summary>Alttan kayarak açılan bildirim; birkaç saniye sonra kendiliğinden kapanır.</summary>
+    async void ShowToast(string text, int milliseconds = 2800)
+    {
+        var version = ++_toastVersion;
+        var animate = SystemParameters.ClientAreaAnimation;
+        ToastText.Text = text;
+
+        Toast.BeginAnimation(OpacityProperty, null);
+        var move = new TranslateTransform(0, animate ? 14 : 0);
+        Toast.RenderTransform = move;
+        Toast.Opacity = animate ? 0 : 1;
+        Toast.Visibility = Visibility.Visible;
+        if (animate)
+        {
+            var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
+            Toast.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(200)) { EasingFunction = ease });
+            move.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(14, 0, TimeSpan.FromMilliseconds(260)) { EasingFunction = ease });
+        }
+
+        await Task.Delay(milliseconds);
+        if (version != _toastVersion) return;                  // araya yeni bildirim girdiyse ona dokunma
+
+        if (!animate) { Toast.Visibility = Visibility.Collapsed; return; }
+        var fade = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(220));
+        fade.Completed += (_, _) =>
+        {
+            if (version == _toastVersion) Toast.Visibility = Visibility.Collapsed;
+        };
+        Toast.BeginAnimation(OpacityProperty, fade);
+        move.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(0, 10, TimeSpan.FromMilliseconds(220)));
     }
 
     // ───────────────────────── İlk açılış: kısayol ─────────────────────────
@@ -712,7 +770,7 @@ public partial class MainWindow : Window
             new("MouseTop", () => MiniBtn, "tour_11_title", "tour_11_text", 6),
             new("MouseTop", () => BrandBtn, "tour_12_title", "tour_12_text", 4),
         };
-        Tour.Run(steps, GoToPage, () =>
+        Tour.Run(steps, GoToPage, completed =>
         {
             _tourActive = false;
             ApplyShields();
@@ -720,6 +778,7 @@ public partial class MainWindow : Window
             _cfg.Save();
             NavMouse.IsChecked = true;
             ScrollPagesToTop();
+            if (!completed) ShowToast(Loc.T("tour_skipped_toast"), 3200);    // atlayana, turu nereden açacağını hatırlat
         });
     }
 
@@ -1211,6 +1270,55 @@ public partial class MainWindow : Window
         TbHex.Text = _cfg.Accent;
         Theme.Apply(_cfg.Dark, _cfg.Accent);
         _cfg.Save();
+        SyncWheel();
+    }
+
+    // ── renk çarkı ──
+
+    bool _syncingWheel;
+    long _lastWheelApply;
+
+    /// <summary>Çark ve parlaklık kaydırıcısını kayıtlı vurgu rengine eşler (olay tetiklemeden).</summary>
+    void SyncWheel()
+    {
+        if (!Theme.TryParse(_cfg.Accent, out var c)) return;
+        _syncingWheel = true;
+        AccentWheel.SetColor(c);
+        AccentBright.Value = Math.Round(AccentWheel.Value * 100);
+        _syncingWheel = false;
+    }
+
+    void Wheel_ColorChanged(Color c, bool final)
+    {
+        if (_syncingWheel || !_ready) return;
+        var hex = $"#{c.R:X2}{c.G:X2}{c.B:X2}";
+        _cfg.Accent = hex;
+        TbHex.Text = hex;
+
+        // sürüklerken tüm arayüzü her pikselde yeniden boyamamak için sınırla
+        var now = Environment.TickCount64;
+        if (final || now - _lastWheelApply >= 45)
+        {
+            _lastWheelApply = now;
+            Theme.Apply(_cfg.Dark, hex);
+        }
+        if (final)
+        {
+            _cfg.Save();
+            SyncSwatches();
+        }
+    }
+
+    void Bright_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_syncingWheel || !_ready) return;
+        AccentWheel.Value = e.NewValue / 100;
+        Wheel_ColorChanged(AccentWheel.Color, final: false);
+    }
+
+    void Bright_Released(object sender, MouseButtonEventArgs e)
+    {
+        Dispatcher.BeginInvoke(() => Wheel_ColorChanged(AccentWheel.Color, final: true), DispatcherPriority.Input);
     }
 
     void Theme_Checked(object sender, RoutedEventArgs e)

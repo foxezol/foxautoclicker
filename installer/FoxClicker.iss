@@ -1,5 +1,5 @@
 ﻿; FoxClicker kurulum betiği (Inno Setup 6)
-; Derleme:  ISCC.exe /DMyAppVersion=0.3.2 installer\FoxClicker.iss
+; Derleme:  ISCC.exe /DMyAppVersion=0.3.3 installer\FoxClicker.iss
 ; Önce:     dotnet publish -c Release -r win-x64 --self-contained -p:PublishReadyToRun=true -o publish
 
 #ifndef MyAppVersion
