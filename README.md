@@ -31,16 +31,19 @@ English · [Türkçe](README.tr.md)
 - One global **start/stop hotkey** (F6 by default; the app asks you to confirm or change it on first launch) that works while another app is in front
 - A visible **countdown** (with cancel) when you start from the button, so you can move the cursor first
 - **Start and stop sounds** in five styles (Soft, Click, Digital, Crystal, Pop) with a preview button and a volume slider, so you can hear that it is working
+- A guided **tour** for new users: it dims the screen, frames each part and explains it in a sentence. Restart it any time from Settings
 - **Profiles**: save mouse and keyboard settings together, load them in one click
 - A small always-on-top **mini window** with the same controls and counters
 - Dark and light themes, a lavender accent by default, seven more accent colors or your own `#RRGGBB`. The window and taskbar icon follow the accent
 - English and Turkish
 - **Automatic updates** from GitHub Releases, with an *Update now / Later* prompt
+- **Reset settings** and **Uninstall** buttons in Settings
 
 <div align="center">
 <img src="docs/screenshots/en-keyboard-recording.png" alt="Key recording" width="400">
 <img src="docs/screenshots/en-profiles.png" alt="Profiles" width="400">
 <img src="docs/screenshots/en-settings-sounds.png" alt="Sound settings" width="400">
+<img src="docs/screenshots/en-tour.png" alt="Guided tour" width="400">
 <img src="docs/screenshots/en-about.png" alt="About" width="400">
 <img src="docs/screenshots/en-mini.png" alt="Mini window" width="260">
 </div>
@@ -92,10 +95,10 @@ To build the installer you also need [Inno Setup 6](https://jrsoftware.org/isinf
 
 ```powershell
 dotnet publish -c Release -r win-x64 --self-contained -p:PublishReadyToRun=true -o publish
-ISCC.exe /DMyAppVersion=0.3.1 installer\FoxClicker.iss     # Releases\FoxClicker-Setup-0.3.1.exe
+ISCC.exe /DMyAppVersion=0.3.2 installer\FoxClicker.iss     # Releases\FoxClicker-Setup-0.3.2.exe
 ```
 
-For the portable zip, zip the contents of `publish` as `FoxClicker-Portable-0.3.1.zip`. Attach both files to a GitHub release tagged `v0.3.1`; installed copies find the update through the release's `*Setup*.exe` asset.
+For the portable zip, zip the contents of `publish` as `FoxClicker-Portable-0.3.2.zip`. Attach both files to a GitHub release tagged `v0.3.2`; installed copies find the update through the release's `*Setup*.exe` asset.
 
 ## Credits
 

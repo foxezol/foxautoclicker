@@ -41,6 +41,8 @@ public partial class MainWindow : Window
     DateTime _armedUntil;
     bool _pulsing;
     Phase? _lastPhase;
+    bool _tourActive;
+    DateTime _resetArmedUntil, _uninstallArmedUntil;
     bool _lastWarn;
     readonly UpdateService _updates = new();
     bool _updating;
@@ -143,7 +145,7 @@ public partial class MainWindow : Window
 
     void Toggle(bool fromButton)
     {
-        if (_capture != null) return;
+        if (_capture != null || _tourActive) return;
 
         if (_ctl.IsActive)
         {
@@ -416,6 +418,8 @@ public partial class MainWindow : Window
         // profiller
         ProfilesEmpty.Visibility = _rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         if (_armedRow != null && DateTime.Now >= _armedUntil) { _armedRow.DeleteArmed = false; _armedRow = null; }
+        ResetBtn.Content = Loc.T(DateTime.Now < _resetArmedUntil ? "maint_reset_confirm" : "maint_reset");
+        UninstallBtn.Content = Loc.T(DateTime.Now < _uninstallArmedUntil ? "maint_uninstall_confirm" : "maint_uninstall");
 
         UpdatePulse(s.Phase == Phase.Running);
         if (_mini is { IsVisible: true }) _mini.Apply(s);
@@ -647,12 +651,138 @@ public partial class MainWindow : Window
         });
     }
 
-    void HotkeyOk_Click(object sender, RoutedEventArgs e)
+    async void HotkeyOk_Click(object sender, RoutedEventArgs e)
     {
         if (_capture != null) EndCapture();
         _cfg.FirstRunDone = true;
         _cfg.Save();
         HideOverlay(HotkeyOverlay, HotkeyCard);
+
+        if (_cfg.TourDone) return;
+        await Task.Delay(SystemParameters.ClientAreaAnimation ? 450 : 0);
+        StartTour();                       // yeni kullanıcıya tanıtım turu
+    }
+
+    // ───────────────────────── Tanıtım turu ─────────────────────────
+
+    void Tour_Click(object sender, RoutedEventArgs e) => StartTour();
+
+    void GoToPage(string tag)
+    {
+        switch (tag)
+        {
+            case "Keyboard": NavKeyboard.IsChecked = true; break;
+            case "Profiles": NavProfiles.IsChecked = true; break;
+            case "Settings": NavSettings.IsChecked = true; break;
+            case "MouseTop":                       // üst çubuk ve alt çubuk adımları: sayfa başa dönsün
+                NavMouse.IsChecked = true;
+                PageMouse.ScrollToTop();
+                break;
+            default: NavMouse.IsChecked = true; break;
+        }
+    }
+
+    void ScrollPagesToTop()
+    {
+        PageMouse.ScrollToTop();
+        PageKeyboard.ScrollToTop();
+        PageProfiles.ScrollToTop();
+        PageSettings.ScrollToTop();
+    }
+
+    void StartTour()
+    {
+        if (Tour.IsActive) return;
+        if (_ctl.IsActive) StopAll(finishedNaturally: false);
+        _tourActive = true;
+        ApplyShields();
+
+        var steps = new List<TourStep>
+        {
+            new("Mouse", null, "tour_1_title", "tour_1_text"),
+            new("Mouse", () => MouseHeader, "tour_2_title", "tour_2_text"),
+            new("Mouse", () => MouseButtonsPanel, "tour_3_title", "tour_3_text"),
+            new("Mouse", () => MouseTiming, "tour_4_title", "tour_4_text"),
+            new("Mouse", () => PositionPanel, "tour_5_title", "tour_5_text"),
+            new("Keyboard", () => KeysPanel, "tour_6_title", "tour_6_text"),
+            new("Profiles", () => ProfilesPanel, "tour_7_title", "tour_7_text"),
+            new("Settings", () => HotkeyPanel, "tour_8_title", "tour_8_text"),
+            new("Settings", () => SoundsPanel, "tour_9_title", "tour_9_text"),
+            new("MouseTop", () => ToggleBtn, "tour_10_title", "tour_10_text", 10),
+            new("MouseTop", () => MiniBtn, "tour_11_title", "tour_11_text", 6),
+            new("MouseTop", () => BrandBtn, "tour_12_title", "tour_12_text", 4),
+        };
+        Tour.Run(steps, GoToPage, () =>
+        {
+            _tourActive = false;
+            ApplyShields();
+            _cfg.TourDone = true;
+            _cfg.Save();
+            NavMouse.IsChecked = true;
+            ScrollPagesToTop();
+        });
+    }
+
+    // ───────────────────────── Sıfırla ve kaldır ─────────────────────────
+
+    void Reset_Click(object sender, RoutedEventArgs e)
+    {
+        if (DateTime.Now >= _resetArmedUntil)
+        {
+            _resetArmedUntil = DateTime.Now.AddSeconds(3);   // ikinci tıklama onaylar
+            return;
+        }
+        _resetArmedUntil = DateTime.MinValue;
+        if (_ctl.IsActive) StopAll(finishedNaturally: false);
+
+        var fresh = new Config();
+        UnregisterHotkey();
+        _cfg.Dark = fresh.Dark;
+        _cfg.Accent = fresh.Accent;
+        _cfg.HotkeyVk = fresh.HotkeyVk;
+        _cfg.HotkeyMods = fresh.HotkeyMods;
+        _cfg.ButtonDelaySec = fresh.ButtonDelaySec;
+        _cfg.AutoUpdateCheck = fresh.AutoUpdateCheck;
+        _cfg.Sounds = fresh.Sounds;
+        _cfg.SoundVariant = fresh.SoundVariant;
+        _cfg.SoundVolume = fresh.SoundVolume;
+        _cfg.Mouse = fresh.Mouse;
+        _cfg.Key = fresh.Key;
+        RegisterHotkey();
+
+        Theme.Apply(_cfg.Dark, _cfg.Accent);
+        ApplyClickersToUi();
+        ApplyAppToUi();
+        _cfg.Save();
+        MaintMsg.Text = Loc.T("maint_reset_done");
+    }
+
+    void Uninstall_Click(object sender, RoutedEventArgs e)
+    {
+        if (!_updates.CanSelfUpdate)
+        {
+            MaintMsg.Text = Loc.T("maint_uninstall_portable");   // taşınabilir sürümde kaldırıcı yok
+            return;
+        }
+        if (DateTime.Now >= _uninstallArmedUntil)
+        {
+            _uninstallArmedUntil = DateTime.Now.AddSeconds(3);
+            return;
+        }
+        _uninstallArmedUntil = DateTime.MinValue;
+        try
+        {
+            if (_ctl.IsActive) StopAll(finishedNaturally: false);
+            ReadUi();
+            _cfg.Save();
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(
+                System.IO.Path.Combine(AppContext.BaseDirectory, "unins000.exe")) { UseShellExecute = true });
+            Application.Current.Shutdown();
+        }
+        catch
+        {
+            MaintMsg.Text = Loc.T("update_error");
+        }
     }
 
     // ───────────────────────── Sesler ─────────────────────────
@@ -705,7 +835,7 @@ public partial class MainWindow : Window
     /// <summary>Kapalı bölümü, tüm kontrolleri tek tek devre dışı bırakmak yerine tek bir yarı saydam katmanla soluklaştırır.</summary>
     void SetShield(Border shield, UIElement body, bool enabled)
     {
-        var blocked = !enabled;
+        var blocked = !enabled && !_tourActive;   // tur sürerken kapalı bölümler de net görünsün
         if (shield.IsHitTestVisible == blocked && _shieldInit.Contains(shield)) return;
         _shieldInit.Add(shield);
         shield.IsHitTestVisible = blocked;
@@ -796,6 +926,7 @@ public partial class MainWindow : Window
 
     protected override void OnPreviewKeyDown(KeyEventArgs e)
     {
+        if (Tour.IsActive && Tour.HandleKey(e.Key)) { e.Handled = true; return; }
         if (e.Key == Key.Escape && !_updating && _capture == null)
         {
             if (UpdateOverlay.Visibility == Visibility.Visible) { HideOverlay(UpdateOverlay, UpdateCard); e.Handled = true; return; }

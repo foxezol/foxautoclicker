@@ -71,6 +71,7 @@ public sealed class Config
     public double? MiniY { get; set; }
     public int Rev { get; set; } = 3;
     public bool FirstRunDone { get; set; }
+    public bool TourDone { get; set; }
     public int SoundVariant { get; set; }
     public int SoundVolume { get; set; } = 70;
     public bool AutoUpdateCheck { get; set; } = true;

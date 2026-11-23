@@ -31,16 +31,19 @@
 - Başka bir uygulamadayken de çalışan tek bir **başlat/durdur kısayolu** (varsayılan F6; ilk açılışta uygulama onaylamanızı ya da değiştirmenizi ister)
 - Düğmeyle başlatırken, imleci hedefe götürebilmeniz için görünür bir **geri sayım** (iptal edilebilir)
 - Beş stilde **başlat ve durdur sesi** (Yumuşak, Klik, Dijital, Kristal, Pop); önizleme düğmesi ve ses düzeyi kaydırıcısıyla. Çalıştığını kulaktan anlarsınız
+- Yeni kullanıcılar için yönlendirmeli **tur**: ekranı karartır, her bölümü çerçeveler ve bir cümleyle anlatır. İstediğiniz zaman Ayarlar'dan yeniden başlatabilirsiniz
 - **Profiller**: fare ve klavye ayarlarını birlikte kaydedin, tek tıkla yükleyin
 - Aynı kontrolleri ve sayaçları taşıyan, her zaman üstte duran küçük **mini pencere**
 - Koyu ve açık tema, varsayılan olarak lavanta vurgu; yedi vurgu rengi daha ya da kendi `#RRGGBB` renginiz. Pencere ve görev çubuğu simgesi vurguyu izler
 - Türkçe ve İngilizce
 - GitHub Releases üzerinden **otomatik güncelleme**; *Şimdi güncelle / Daha sonra* sorusuyla
+- Ayarlar'da **Ayarları sıfırla** ve **Uygulamayı kaldır** düğmeleri
 
 <div align="center">
 <img src="docs/screenshots/tr-keyboard-recording.png" alt="Tuş kaydı" width="400">
 <img src="docs/screenshots/tr-profiles.png" alt="Profiller" width="400">
 <img src="docs/screenshots/tr-settings-sounds.png" alt="Ses ayarları" width="400">
+<img src="docs/screenshots/tr-tour.png" alt="Tanıtım turu" width="400">
 <img src="docs/screenshots/tr-about.png" alt="Hakkında" width="400">
 <img src="docs/screenshots/tr-mini.png" alt="Mini pencere" width="260">
 </div>
@@ -92,10 +95,10 @@ Yükleyiciyi derlemek için ayrıca [Inno Setup 6](https://jrsoftware.org/isinfo
 
 ```powershell
 dotnet publish -c Release -r win-x64 --self-contained -p:PublishReadyToRun=true -o publish
-ISCC.exe /DMyAppVersion=0.3.1 installer\FoxClicker.iss     # Releases\FoxClicker-Setup-0.3.1.exe
+ISCC.exe /DMyAppVersion=0.3.2 installer\FoxClicker.iss     # Releases\FoxClicker-Setup-0.3.2.exe
 ```
 
-Taşınabilir zip için `publish` klasörünün içeriğini `FoxClicker-Portable-0.3.1.zip` olarak sıkıştırın. İki dosyayı `v0.3.1` etiketli bir GitHub sürümüne ekleyin; kurulu kopyalar güncellemeyi sürümdeki `*Setup*.exe` dosyasından bulur.
+Taşınabilir zip için `publish` klasörünün içeriğini `FoxClicker-Portable-0.3.2.zip` olarak sıkıştırın. İki dosyayı `v0.3.2` etiketli bir GitHub sürümüne ekleyin; kurulu kopyalar güncellemeyi sürümdeki `*Setup*.exe` dosyasından bulur.
 
 ## Emeği geçenler
 

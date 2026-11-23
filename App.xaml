@@ -143,6 +143,11 @@
         <Style x:Key="SecondaryButton" TargetType="Button" BasedOn="{StaticResource ButtonBase}">
             <Setter Property="Background" Value="{DynamicResource ButtonSecondary}"/>
         </Style>
+        <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource ButtonBase}">
+            <Setter Property="Background" Value="{DynamicResource BadSoft}"/>
+            <Setter Property="Foreground" Value="{DynamicResource StatusBad}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
         <Style x:Key="GhostButton" TargetType="Button" BasedOn="{StaticResource ButtonBase}">
             <Setter Property="MinHeight" Value="32"/>
             <Setter Property="Padding" Value="10,5"/>

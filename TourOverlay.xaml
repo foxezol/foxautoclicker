@@ -1,0 +1,43 @@
+<UserControl x:Class="FoxAutoClicker.TourOverlay"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:FoxAutoClicker"
+             Visibility="Collapsed" Focusable="False">
+    <Grid>
+        <!-- Tıklamaları yutar: tur sürerken altındaki arayüz kullanılamaz -->
+        <Rectangle Fill="Transparent"/>
+        <!-- Karartma: ekranın tamamı, vurgulanan öğenin etrafında delik açılmış -->
+        <Path x:Name="Dim" Fill="{DynamicResource Scrim}" IsHitTestVisible="False"/>
+        <!-- Vurgu çerçevesi -->
+        <Path x:Name="Ring" Stroke="{DynamicResource Accent}" StrokeThickness="2" IsHitTestVisible="False"/>
+
+        <Canvas x:Name="Layer">
+            <Border x:Name="Arrow" Width="14" Height="14" Background="{DynamicResource Card}" IsHitTestVisible="False"
+                    RenderTransformOrigin="0.5,0.5">
+                <Border.RenderTransform><RotateTransform Angle="45"/></Border.RenderTransform>
+            </Border>
+
+            <Border x:Name="Pop" Width="344" CornerRadius="18" Background="{DynamicResource Card}" Padding="22,18,22,16">
+                <Border.Effect><DropShadowEffect BlurRadius="30" ShadowDepth="8" Opacity="0.5" Color="Black"/></Border.Effect>
+                <StackPanel>
+                    <Grid>
+                        <TextBlock x:Name="TitleText" Style="{StaticResource Title}" TextWrapping="Wrap" Margin="0,0,34,0"/>
+                        <Button x:Name="SkipBtn" Style="{StaticResource IconButton}" HorizontalAlignment="Right" VerticalAlignment="Top"
+                                Margin="0,-6,-10,0" Click="Skip_Click" AutomationProperties.Name="Skip tour">
+                            <Path Style="{StaticResource MiniIcon}" Data="M2.5 2.5 L9.5 9.5 M9.5 2.5 L2.5 9.5"/>
+                        </Button>
+                    </Grid>
+                    <TextBlock x:Name="BodyText" Style="{StaticResource BodyMuted}" Margin="0,8,0,0"/>
+                    <Grid Margin="0,18,0,0">
+                        <StackPanel x:Name="Dots" Orientation="Horizontal" VerticalAlignment="Center"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button x:Name="BackBtn" Style="{StaticResource SecondaryButton}" Content="{local:L tour_back}" Click="Back_Click" Margin="0,0,8,0"/>
+                            <Button x:Name="NextBtn" Style="{StaticResource PrimaryButton}" Click="Next_Click"/>
+                        </StackPanel>
+                    </Grid>
+                    <TextBlock x:Name="ProgressText" Style="{StaticResource Caption}" FontFamily="{StaticResource NumFont}" Margin="0,10,0,0"/>
+                </StackPanel>
+            </Border>
+        </Canvas>
+    </Grid>
+</UserControl>

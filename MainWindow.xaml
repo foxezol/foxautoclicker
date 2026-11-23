@@ -50,7 +50,7 @@
             <!-- Fare -->
             <ScrollViewer x:Name="PageMouse" VerticalScrollBarVisibility="Auto">
                 <StackPanel Margin="24,4,24,12">
-                    <Border Style="{StaticResource Panel}">
+                    <Border x:Name="MouseHeader" Style="{StaticResource Panel}">
                         <StackPanel>
                             <Grid>
                                 <TextBlock Style="{StaticResource Title}" Text="{local:L mouse_title}" VerticalAlignment="Center"/>
@@ -64,7 +64,7 @@
 
                     <Grid>
                     <StackPanel x:Name="MouseBody">
-                        <Border Style="{StaticResource Panel}">
+                        <Border x:Name="MouseButtonsPanel" Style="{StaticResource Panel}">
                             <StackPanel>
                                 <Grid>
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
@@ -92,7 +92,7 @@
 
                         <local:TimingPanel x:Name="MouseTiming" Margin="0,0,0,12"/>
 
-                        <Border Style="{StaticResource Panel}">
+                        <Border x:Name="PositionPanel" Style="{StaticResource Panel}">
                             <StackPanel>
                                 <TextBlock Style="{StaticResource Title}" Text="{local:L position}"/>
                                 <RadioButton x:Name="PosCursor" GroupName="Pos" Content="{local:L pos_cursor}" IsChecked="True" Margin="0,12,0,8"/>
@@ -130,7 +130,7 @@
 
                     <Grid>
                     <StackPanel x:Name="KeyBody">
-                        <Border Style="{StaticResource Panel}">
+                        <Border x:Name="KeysPanel" Style="{StaticResource Panel}">
                             <StackPanel>
                                 <TextBlock Style="{StaticResource Title}" Text="{local:L keys}"/>
                                 <TextBlock Style="{StaticResource Caption}" Margin="0,4,0,10" Text="{local:L keys_hint}"/>
@@ -195,7 +195,7 @@
             <!-- Profiller -->
             <ScrollViewer x:Name="PageProfiles" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
                 <StackPanel Margin="24,4,24,12">
-                    <Border Style="{StaticResource Panel}">
+                    <Border x:Name="ProfilesPanel" Style="{StaticResource Panel}">
                         <StackPanel>
                             <TextBlock Style="{StaticResource Title}" Text="{local:L profiles_title}"/>
                             <TextBlock Style="{StaticResource Caption}" Margin="0,4,0,12" Text="{local:L profiles_desc}"/>
@@ -333,7 +333,7 @@
                         </StackPanel>
                     </Border>
 
-                    <Border Style="{StaticResource Panel}">
+                    <Border x:Name="HotkeyPanel" Style="{StaticResource Panel}">
                         <StackPanel>
                             <TextBlock Style="{StaticResource Title}" Text="{local:L hotkey_title}"/>
                             <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
@@ -357,7 +357,7 @@
                         </StackPanel>
                     </Border>
 
-                    <Border Style="{StaticResource Panel}">
+                    <Border x:Name="SoundsPanel" Style="{StaticResource Panel}">
                         <StackPanel>
                             <TextBlock Style="{StaticResource Title}" Text="{local:L sounds_title}"/>
                             <Grid Margin="0,12,0,0">
@@ -420,6 +420,45 @@
                                 <Button x:Name="CheckUpdateBtn" Style="{StaticResource SecondaryButton}" Content="{local:L update_check}" Click="CheckUpdate_Click"/>
                                 <TextBlock x:Name="UpdateStatus" Style="{StaticResource Caption}" VerticalAlignment="Center" Margin="12,0,0,0" MaxWidth="360"/>
                             </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Panel}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource Title}" Text="{local:L maint_title}"/>
+
+                            <Grid Margin="0,14,0,0">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+                                    <TextBlock Text="{local:L maint_tour}"/>
+                                    <TextBlock Style="{StaticResource Caption}" Text="{local:L maint_tour_note}"/>
+                                </StackPanel>
+                                <Button x:Name="TourBtn" Grid.Column="1" Style="{StaticResource SecondaryButton}" Content="{local:L tour_start}" Click="Tour_Click"/>
+                            </Grid>
+
+                            <Border Style="{StaticResource Hairline}" Margin="0,16"/>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+                                    <TextBlock Text="{local:L maint_reset}"/>
+                                    <TextBlock Style="{StaticResource Caption}" Text="{local:L maint_reset_note}"/>
+                                </StackPanel>
+                                <Button x:Name="ResetBtn" Grid.Column="1" Style="{StaticResource SecondaryButton}" Content="{local:L maint_reset}" Click="Reset_Click"/>
+                            </Grid>
+
+                            <Border Style="{StaticResource Hairline}" Margin="0,16"/>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+                                    <TextBlock Text="{local:L maint_uninstall}"/>
+                                    <TextBlock Style="{StaticResource Caption}" Text="{local:L maint_uninstall_note}"/>
+                                </StackPanel>
+                                <Button x:Name="UninstallBtn" Grid.Column="1" Style="{StaticResource DangerButton}" Content="{local:L maint_uninstall}" Click="Uninstall_Click"/>
+                            </Grid>
+
+                            <TextBlock x:Name="MaintMsg" Style="{StaticResource Caption}" Margin="0,12,0,0" MinHeight="18"/>
                         </StackPanel>
                     </Border>
 
@@ -563,5 +602,8 @@
                 </StackPanel>
             </Border>
         </Border>
+
+        <!-- Tanıtım turu (en üstte) -->
+        <local:TourOverlay x:Name="Tour" Grid.RowSpan="3"/>
     </Grid>
 </Window>
