@@ -1,0 +1,521 @@
+<Window x:Class="FoxAutoClicker.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:FoxAutoClicker"
+        Title="FoxAutoClicker" Width="780" Height="700" MinWidth="740" MinHeight="620"
+        WindowStartupLocation="CenterScreen" UseLayoutRounding="True"
+        Icon="pack://application:,,,/Assets/app.ico"
+        Background="{DynamicResource Background}" Foreground="{DynamicResource Foreground}"
+        FontFamily="{StaticResource UiFont}" FontSize="14">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- ═════════ Üst çubuk ═════════ -->
+        <Grid Margin="24,16,24,10">
+            <Button x:Name="BrandBtn" Style="{StaticResource BrandButton}" HorizontalAlignment="Left" VerticalAlignment="Center"
+                    Click="Brand_Click" AutomationProperties.Name="About FoxClicker">
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle Width="30" Height="46" Fill="{DynamicResource Accent}">
+                        <Rectangle.OpacityMask>
+                            <ImageBrush ImageSource="pack://application:,,,/Assets/logo.png" Stretch="Uniform"/>
+                        </Rectangle.OpacityMask>
+                    </Rectangle>
+                    <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" Text="FoxClicker"
+                               FontFamily="{StaticResource DisplayFont}" FontSize="18" FontWeight="SemiBold"/>
+                </StackPanel>
+            </Button>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Border CornerRadius="22" Background="{DynamicResource Card}" Padding="4">
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton x:Name="NavMouse" Style="{StaticResource TabPill}" GroupName="Nav" IsChecked="True" Tag="Mouse" Content="{local:L tab_mouse}" Checked="Nav_Checked"/>
+                        <RadioButton x:Name="NavKeyboard" Style="{StaticResource TabPill}" GroupName="Nav" Tag="Keyboard" Content="{local:L tab_keyboard}" Checked="Nav_Checked"/>
+                        <RadioButton x:Name="NavProfiles" Style="{StaticResource TabPill}" GroupName="Nav" Tag="Profiles" Content="{local:L tab_profiles}" Checked="Nav_Checked"/>
+                        <RadioButton x:Name="NavSettings" Style="{StaticResource TabPill}" GroupName="Nav" Tag="Settings" Content="{local:L tab_settings}" Checked="Nav_Checked"/>
+                    </StackPanel>
+                </Border>
+                <Button x:Name="MiniBtn" Style="{StaticResource IconButton}" Width="40" Height="40" Margin="8,0,0,0"
+                        ToolTip="{local:L mini_tip}" AutomationProperties.Name="Mini window" Click="Mini_Click">
+                    <Path Style="{StaticResource MiniIcon}" Width="16" Height="16" Data="M2 2 H9 V9 H2 Z M7 7 H14 V14 H7 Z"/>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- ═════════ Sayfalar ═════════ -->
+        <Grid Grid.Row="1">
+
+            <!-- Fare -->
+            <ScrollViewer x:Name="PageMouse" VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="24,4,24,12">
+                    <Border Style="{StaticResource Panel}">
+                        <StackPanel>
+                            <Grid>
+                                <TextBlock Style="{StaticResource Title}" Text="{local:L mouse_title}" VerticalAlignment="Center"/>
+                                <ToggleButton x:Name="ChkMouse" Style="{StaticResource Switch}" HorizontalAlignment="Right" Checked="Enable_Changed" Unchecked="Enable_Changed"
+                                              AutomationProperties.Name="Mouse clicker on/off"/>
+                            </Grid>
+                            <TextBlock x:Name="MouseOffNote" Style="{StaticResource Caption}" Margin="0,8,0,0" Visibility="Collapsed"
+                                       Text="{local:L mouse_off_note}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Grid>
+                    <StackPanel x:Name="MouseBody">
+                        <Border Style="{StaticResource Panel}">
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource Caption}" Text="{local:L btn_label}" Margin="0,0,0,6"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <RadioButton x:Name="MbLeft" Style="{StaticResource Segment}" GroupName="Mb" Content="{local:L seg_left}" IsChecked="True"/>
+                                            <RadioButton x:Name="MbMiddle" Style="{StaticResource Segment}" GroupName="Mb" Content="{local:L seg_middle}"/>
+                                            <RadioButton x:Name="MbRight" Style="{StaticResource Segment}" GroupName="Mb" Content="{local:L seg_right}"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Style="{StaticResource Caption}" Text="{local:L type_label}" Margin="0,0,0,6"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <RadioButton x:Name="MtSingle" Style="{StaticResource Segment}" GroupName="Mt" Content="{local:L seg_single}" IsChecked="True"/>
+                                            <RadioButton x:Name="MtDouble" Style="{StaticResource Segment}" GroupName="Mt" Content="{local:L seg_double}"/>
+                                            <RadioButton x:Name="MtHold" Style="{StaticResource Segment}" GroupName="Mt" Content="{local:L seg_hold}"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Grid>
+                                <TextBlock x:Name="MouseHoldNote" Style="{StaticResource Caption}" Margin="0,10,0,0" Visibility="Collapsed"
+                                           Text="{local:L mouse_hold_note}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <local:TimingPanel x:Name="MouseTiming" Margin="0,0,0,12"/>
+
+                        <Border Style="{StaticResource Panel}">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource Title}" Text="{local:L position}"/>
+                                <RadioButton x:Name="PosCursor" GroupName="Pos" Content="{local:L pos_cursor}" IsChecked="True" Margin="0,12,0,8"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton x:Name="PosFixed" GroupName="Pos" Content="{local:L pos_fixed}" Margin="0,0,16,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="X" Style="{StaticResource BodyMuted}" VerticalAlignment="Center" Margin="0,0,6,8"/>
+                                    <TextBox x:Name="TbX" Width="100" Text="0" MaxLength="5" PreviewTextInput="Digits" Margin="0,0,12,8" HorizontalContentAlignment="Center"/>
+                                    <TextBlock Text="Y" Style="{StaticResource BodyMuted}" VerticalAlignment="Center" Margin="0,0,6,8"/>
+                                    <TextBox x:Name="TbY" Width="100" Text="0" MaxLength="5" PreviewTextInput="Digits" Margin="0,0,12,8" HorizontalContentAlignment="Center"/>
+                                    <Button x:Name="PickBtn" Style="{StaticResource SecondaryButton}" Content="{local:L pick}" Click="PickPos_Click" Margin="0,0,0,8"/>
+                                </StackPanel>
+                                <TextBlock Style="{StaticResource Caption}" Text="{local:L pick_note}"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                    <Border x:Name="MouseShield" Background="{DynamicResource Background}" CornerRadius="16" Margin="0,0,0,12" Opacity="0" IsHitTestVisible="False"/>
+                    </Grid>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Klavye -->
+            <ScrollViewer x:Name="PageKeyboard" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
+                <StackPanel Margin="24,4,24,12">
+                    <Border Style="{StaticResource Panel}">
+                        <StackPanel>
+                            <Grid>
+                                <TextBlock Style="{StaticResource Title}" Text="{local:L key_title}" VerticalAlignment="Center"/>
+                                <ToggleButton x:Name="ChkKey" Style="{StaticResource Switch}" HorizontalAlignment="Right" Checked="Enable_Changed" Unchecked="Enable_Changed"
+                                              AutomationProperties.Name="Keyboard clicker on/off"/>
+                            </Grid>
+                            <TextBlock x:Name="KeyOffNote" Style="{StaticResource Caption}" Margin="0,8,0,0" Visibility="Collapsed"
+                                       Text="{local:L key_off_note}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Grid>
+                    <StackPanel x:Name="KeyBody">
+                        <Border Style="{StaticResource Panel}">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource Title}" Text="{local:L keys}"/>
+                                <TextBlock Style="{StaticResource Caption}" Margin="0,4,0,10" Text="{local:L keys_hint}"/>
+
+                                <Border x:Name="RecBanner" Visibility="Collapsed" Background="{DynamicResource BadSoft}" CornerRadius="10" Padding="14,10" Margin="0,0,0,12">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Ellipse Width="10" Height="10" Fill="{DynamicResource StatusBad}" VerticalAlignment="Center"/>
+                                            <TextBlock Margin="10,0,0,0" FontWeight="SemiBold" Foreground="{DynamicResource StatusBad}" Text="{local:L recording}"/>
+                                            <TextBlock x:Name="RecCount" Margin="12,0,0,0" FontFamily="{StaticResource NumFont}" FontWeight="SemiBold"/>
+                                        </StackPanel>
+                                        <TextBlock x:Name="RecHint" Style="{StaticResource Caption}" Margin="20,4,0,0"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <ItemsControl x:Name="KeyChips">
+                                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{DynamicResource ButtonSecondary}" CornerRadius="10" Padding="10,2,3,2" Margin="0,0,6,6">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="{Binding Index}" Style="{StaticResource Caption}" FontFamily="{StaticResource NumFont}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                    <TextBlock Text="{Binding Name}" FontFamily="{StaticResource NumFont}" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                    <Button Style="{StaticResource IconButton}" Width="24" Height="24" ToolTip="{local:L key_left}" Click="KeyLeft_Click">
+                                                        <Path Style="{StaticResource MiniIcon}" Data="M8 2 L4 6 L8 10"/>
+                                                    </Button>
+                                                    <Button Style="{StaticResource IconButton}" Width="24" Height="24" ToolTip="{local:L key_right}" Click="KeyRight_Click">
+                                                        <Path Style="{StaticResource MiniIcon}" Data="M4 2 L8 6 L4 10"/>
+                                                    </Button>
+                                                    <Button Style="{StaticResource IconButton}" Width="24" Height="24" ToolTip="{local:L key_remove}" Click="KeyRemove_Click">
+                                                        <Path Style="{StaticResource MiniIcon}" Data="M2.5 2.5 L9.5 9.5 M9.5 2.5 L2.5 9.5"/>
+                                                    </Button>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <TextBlock x:Name="KeyEmpty" Style="{StaticResource BodyMuted}" Margin="0,0,0,10" Text="{local:L keys_empty}"/>
+
+                                <WrapPanel Margin="0,2,0,0">
+                                    <Button x:Name="AddKeyBtn" Style="{StaticResource SecondaryButton}" Content="{local:L add_key}" Click="AddKey_Click" Margin="0,0,6,6"/>
+                                    <Button x:Name="RecordBtn" Style="{StaticResource SecondaryButton}" Content="{local:L record_start}" Click="Record_Click" Margin="0,0,6,6"/>
+                                    <Button x:Name="UndoBtn" Style="{StaticResource SecondaryButton}" Content="{local:L undo_key}" Click="UndoKey_Click" Margin="0,0,6,6"/>
+                                    <Button x:Name="ClearBtn" Style="{StaticResource GhostButton}" Content="{local:L clear}" Click="ClearKeys_Click" Margin="0,0,0,6"/>
+                                </WrapPanel>
+
+                                <TextBlock Style="{StaticResource Caption}" Text="{local:L key_mode}" Margin="0,14,0,6"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton x:Name="KmPress" Style="{StaticResource Segment}" GroupName="Km" Content="{local:L km_press}" IsChecked="True"/>
+                                    <RadioButton x:Name="KmHold" Style="{StaticResource Segment}" GroupName="Km" Content="{local:L km_hold}"/>
+                                </StackPanel>
+                                <TextBlock x:Name="KeyFlow" Style="{StaticResource Caption}" Margin="0,10,0,0"/>
+                            </StackPanel>
+                        </Border>
+                        <local:TimingPanel x:Name="KeyTiming" Margin="0,0,0,12"/>
+                    </StackPanel>
+                    <Border x:Name="KeyShield" Background="{DynamicResource Background}" CornerRadius="16" Margin="0,0,0,12" Opacity="0" IsHitTestVisible="False"/>
+                    </Grid>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Profiller -->
+            <ScrollViewer x:Name="PageProfiles" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
+                <StackPanel Margin="24,4,24,12">
+                    <Border Style="{StaticResource Panel}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource Title}" Text="{local:L profiles_title}"/>
+                            <TextBlock Style="{StaticResource Caption}" Margin="0,4,0,12" Text="{local:L profiles_desc}"/>
+                            <ItemsControl x:Name="ProfileList">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{DynamicResource ButtonSecondary}" CornerRadius="12" Padding="14,6,6,6" Margin="0,0,0,6" MinHeight="44">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsEditing}" Value="True"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                                <TextBox Text="{Binding EditText, UpdateSourceTrigger=PropertyChanged}" MaxLength="16" FontFamily="{StaticResource UiFont}" FontSize="14"
+                                                         Padding="8,4" Margin="0,0,8,0" VerticalAlignment="Center"
+                                                         KeyDown="EditBox_KeyDown" IsVisibleChanged="EditBox_IsVisibleChanged">
+                                                    <TextBox.Style>
+                                                        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsEditing}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBox.Style>
+                                                </TextBox>
+
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                                    <StackPanel.Style>
+                                                        <Style TargetType="StackPanel">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsEditing}" Value="True"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </StackPanel.Style>
+                                                    <Button Style="{StaticResource SecondaryButton}" Content="{local:L profile_load}" MinHeight="32" Padding="14,4" FontSize="13"
+                                                            Background="{DynamicResource Raised}" Margin="0,0,4,0" Click="ProfileLoad_Click"/>
+                                                    <Button Style="{StaticResource IconButton}" Width="32" Height="32" ToolTip="{local:L profile_update}" Click="ProfileUpdate_Click">
+                                                        <Path Style="{StaticResource MiniIcon}" Width="14" Height="14" Data="M12 7 A5 5 0 1 1 10 3 M10 0.5 V3.5 H13"/>
+                                                    </Button>
+                                                    <Button Style="{StaticResource IconButton}" Width="32" Height="32" ToolTip="{local:L profile_rename}" Click="ProfileRename_Click">
+                                                        <Path Style="{StaticResource MiniIcon}" Width="14" Height="14" Data="M2 12 L2.8 9 L9.5 2.3 L11.7 4.5 L5 11.2 Z"/>
+                                                    </Button>
+                                                    <TextBlock Text="{local:L profile_confirm}" Foreground="{DynamicResource StatusBad}" FontSize="12.5" FontWeight="SemiBold"
+                                                               VerticalAlignment="Center" Margin="6,0,2,0">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding DeleteArmed}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                    <Button Style="{StaticResource IconButton}" Width="32" Height="32" ToolTip="{local:L profile_delete}" Click="ProfileDelete_Click">
+                                                        <Path Width="14" Height="14" Stretch="None" StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                                              Data="M2 4 H12 M5.5 4 V2.5 H8.5 V4 M3.5 4 L4 12 H10 L10.5 4">
+                                                            <Path.Style>
+                                                                <Style TargetType="Path">
+                                                                    <Setter Property="Stroke" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding DeleteArmed}" Value="True"><Setter Property="Stroke" Value="{DynamicResource StatusBad}"/></DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Path.Style>
+                                                        </Path>
+                                                    </Button>
+                                                </StackPanel>
+
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                                    <StackPanel.Style>
+                                                        <Style TargetType="StackPanel">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsEditing}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </StackPanel.Style>
+                                                    <Button Style="{StaticResource IconButton}" Width="32" Height="32" ToolTip="{local:L profile_ok}" Click="ProfileEditOk_Click">
+                                                        <Path Style="{StaticResource MiniIcon}" Width="14" Height="14" Data="M2.5 7.5 L5.5 10.5 L11.5 3.5"/>
+                                                    </Button>
+                                                    <Button Style="{StaticResource IconButton}" Width="32" Height="32" ToolTip="{local:L profile_cancel}" Click="ProfileEditCancel_Click">
+                                                        <Path Style="{StaticResource MiniIcon}" Width="14" Height="14" Data="M3 3 L11 11 M11 3 L3 11"/>
+                                                    </Button>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock x:Name="ProfilesEmpty" Style="{StaticResource BodyMuted}" Text="{local:L profiles_empty}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Panel}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource Caption}" Text="{local:L profile_name}" Margin="0,0,0,6"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBox x:Name="TbProfile" MaxLength="16" FontFamily="{StaticResource UiFont}" FontSize="14" KeyDown="TbProfile_KeyDown"/>
+                                <Button x:Name="ProfileSaveNew" Grid.Column="1" Style="{StaticResource PrimaryButton}" Content="{local:L profile_save_new}" Click="ProfileSaveNew_Click" Margin="8,0,0,0"/>
+                            </Grid>
+                            <TextBlock x:Name="ProfileMsg" Style="{StaticResource Caption}" Margin="0,8,0,0" MinHeight="18"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Ayarlar -->
+            <ScrollViewer x:Name="PageSettings" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
+                <StackPanel Margin="24,4,24,12">
+                    <Border Style="{StaticResource Panel}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource Title}" Text="{local:L appearance}"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                                <RadioButton x:Name="ThemeDark" Style="{StaticResource Segment}" GroupName="Th" Content="{local:L theme_dark}" Checked="Theme_Checked"/>
+                                <RadioButton x:Name="ThemeLight" Style="{StaticResource Segment}" GroupName="Th" Content="{local:L theme_light}" Checked="Theme_Checked"/>
+                            </StackPanel>
+                            <TextBlock Style="{StaticResource Caption}" Margin="0,16,0,6" Text="{local:L accent}"/>
+                            <WrapPanel x:Name="SwatchHost"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                <TextBox x:Name="TbHex" Width="110" Text="#FF6A1F" MaxLength="7" HorizontalContentAlignment="Center"/>
+                                <Button Style="{StaticResource SecondaryButton}" Content="{local:L apply}" Margin="8,0,0,0" Click="HexApply_Click"/>
+                            </StackPanel>
+                            <TextBlock x:Name="HexNote" Style="{StaticResource Caption}" Margin="0,8,0,0" Text="{local:L hex_note}"/>
+                            <TextBlock Style="{StaticResource Caption}" Margin="0,16,0,6" Text="{local:L language}"/>
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton x:Name="LangTr" Style="{StaticResource Segment}" GroupName="Lg" Content="Türkçe" Checked="Lang_Checked"/>
+                                <RadioButton x:Name="LangEn" Style="{StaticResource Segment}" GroupName="Lg" Content="English" Checked="Lang_Checked"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Panel}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource Title}" Text="{local:L hotkey_title}"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                                <Border Background="{DynamicResource ButtonSecondary}" CornerRadius="10" Padding="14,7" VerticalAlignment="Center">
+                                    <TextBlock x:Name="HotkeyChip" FontFamily="{StaticResource NumFont}" FontWeight="SemiBold" Text="F6"/>
+                                </Border>
+                                <Button x:Name="HotkeyBtn" Style="{StaticResource SecondaryButton}" Content="{local:L hotkey_change}" Margin="8,0,0,0" Click="HotkeyChange_Click"/>
+                            </StackPanel>
+                            <TextBlock Style="{StaticResource Caption}" Margin="0,8,0,0" Text="{local:L hotkey_desc}"/>
+                            <Grid Margin="0,16,0,0">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+                                    <TextBlock Text="{local:L delay_label}"/>
+                                    <TextBlock Style="{StaticResource Caption}" Text="{local:L delay_note}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <TextBox x:Name="TbDelay" Width="64" Text="3" MaxLength="2" PreviewTextInput="Digits" HorizontalContentAlignment="Center"/>
+                                    <TextBlock Text="{local:L sec}" Style="{StaticResource BodyMuted}" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Panel}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource Title}" Text="{local:L sounds_title}"/>
+                            <Grid Margin="0,12,0,0">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+                                    <TextBlock Text="{local:L sound_label}"/>
+                                    <TextBlock Style="{StaticResource Caption}" Text="{local:L sound_note}"/>
+                                </StackPanel>
+                                <ToggleButton x:Name="ChkSounds" Grid.Column="1" Style="{StaticResource Switch}" VerticalAlignment="Center"
+                                              AutomationProperties.Name="Start and stop sound"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Panel}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource Title}" Text="{local:L games_title}"/>
+                            <TextBlock Style="{StaticResource BodyMuted}" Margin="0,6,0,0" Text="{local:L games_note}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Panel}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource Title}" Text="{local:L updates_title}"/>
+                            <Grid Margin="0,12,0,0">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+                                    <TextBlock Text="{local:L update_auto}"/>
+                                    <TextBlock Style="{StaticResource Caption}" Text="{local:L update_auto_note}"/>
+                                </StackPanel>
+                                <ToggleButton x:Name="ChkAutoUpdate" Grid.Column="1" Style="{StaticResource Switch}" VerticalAlignment="Center"
+                                              AutomationProperties.Name="Check for updates automatically"/>
+                            </Grid>
+                            <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                                <Button x:Name="CheckUpdateBtn" Style="{StaticResource SecondaryButton}" Content="{local:L update_check}" Click="CheckUpdate_Click"/>
+                                <TextBlock x:Name="UpdateStatus" Style="{StaticResource Caption}" VerticalAlignment="Center" Margin="12,0,0,0" MaxWidth="360"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    </StackPanel>
+            </ScrollViewer>
+
+            <!-- Geri sayım katmanı -->
+            <Border x:Name="CountdownOverlay" Background="{DynamicResource Scrim}" Visibility="Collapsed">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock x:Name="CountdownNumber" FontFamily="{StaticResource NumFont}" FontSize="96" FontWeight="SemiBold"
+                               Foreground="{DynamicResource Accent}" HorizontalAlignment="Center" Text="3"/>
+                    <TextBlock Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,18" Text="{local:L countdown_hint}"/>
+                    <Button x:Name="CountdownCancel" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Center"
+                            Content="{local:L btn_cancel}" Click="Toggle_Click"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- ═════════ Alt çubuk: durum, sayaçlar, başlat ═════════ -->
+        <Border Grid.Row="2" Background="{DynamicResource Card}" Padding="24,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel VerticalAlignment="Center" MinWidth="140">
+                    <Border x:Name="StateChip" CornerRadius="15" Padding="12,5,14,5" HorizontalAlignment="Left"
+                            Background="{DynamicResource ButtonSecondary}">
+                        <StackPanel Orientation="Horizontal">
+                            <Grid Width="16" Height="16" VerticalAlignment="Center" Margin="0,0,8,0">
+                                <Ellipse x:Name="PulseRing" Fill="{DynamicResource Accent}" Opacity="0" RenderTransformOrigin="0.5,0.5">
+                                    <Ellipse.RenderTransform><ScaleTransform x:Name="PulseScale"/></Ellipse.RenderTransform>
+                                </Ellipse>
+                                <Ellipse x:Name="StateDot" Width="10" Height="10" Fill="{DynamicResource StatusNeutral}"/>
+                            </Grid>
+                            <TextBlock x:Name="StateTitle" FontWeight="SemiBold" Text="Hazır"/>
+                        </StackPanel>
+                    </Border>
+                    <TextBlock x:Name="StateText" Style="{StaticResource Caption}" Margin="4,6,0,0" MaxWidth="200" Visibility="Collapsed"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="12,0">
+                    <StackPanel Margin="0,0,20,0">
+                        <TextBlock x:Name="MetricMouse" Style="{StaticResource Num}" Text="0"/>
+                        <TextBlock Style="{StaticResource Caption}" Text="{local:L m_clicks}" TextWrapping="NoWrap"/>
+                    </StackPanel>
+                    <StackPanel Margin="0,0,20,0">
+                        <TextBlock x:Name="MetricKey" Style="{StaticResource Num}" Text="0"/>
+                        <TextBlock Style="{StaticResource Caption}" Text="{local:L m_keys}" TextWrapping="NoWrap"/>
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock x:Name="MetricTime" Style="{StaticResource Num}" Text="0:00:00"/>
+                        <TextBlock Style="{StaticResource Caption}" Text="{local:L m_time}" TextWrapping="NoWrap"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <Button x:Name="ToggleBtn" Grid.Column="2" Style="{StaticResource StartButton}" Click="Toggle_Click" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock x:Name="ToggleLabel" Text="Başlat"/>
+                        <Border CornerRadius="7" Background="#2E000000" Padding="8,1" Margin="12,0,0,0" VerticalAlignment="Center">
+                            <TextBlock x:Name="ToggleKey" FontFamily="{StaticResource NumFont}" FontSize="12.5" FontWeight="SemiBold" Text="F6"/>
+                        </Border>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- Hakkında -->
+        <Border x:Name="AboutOverlay" Grid.RowSpan="3" Background="{DynamicResource Scrim}" Visibility="Collapsed"
+                KeyboardNavigation.TabNavigation="Cycle" MouseLeftButtonDown="AboutOverlay_MouseDown">
+            <Border CornerRadius="20" Background="{DynamicResource Card}" Padding="30,28" Width="380"
+                    HorizontalAlignment="Center" VerticalAlignment="Center" MouseLeftButtonDown="Card_MouseDown">
+                <Border.Effect><DropShadowEffect BlurRadius="30" ShadowDepth="8" Opacity="0.45" Color="Black"/></Border.Effect>
+                <StackPanel>
+                    <Rectangle Width="58" Height="90" Fill="{DynamicResource Accent}" HorizontalAlignment="Center">
+                        <Rectangle.OpacityMask>
+                            <ImageBrush ImageSource="pack://application:,,,/Assets/logo.png" Stretch="Uniform"/>
+                        </Rectangle.OpacityMask>
+                    </Rectangle>
+                    <TextBlock Text="FoxClicker" HorizontalAlignment="Center" Margin="0,14,0,0"
+                               FontFamily="{StaticResource DisplayFont}" FontSize="24" FontWeight="SemiBold"/>
+                    <TextBlock x:Name="AboutVersionText" Style="{StaticResource Caption}" HorizontalAlignment="Center" Margin="0,2,0,12"
+                               FontFamily="{StaticResource NumFont}"/>
+                    <TextBlock Style="{StaticResource BodyMuted}" TextAlignment="Center" Text="{local:L about_desc}"/>
+                    <Border Style="{StaticResource Hairline}" Margin="0,18"/>
+                    <TextBlock Text="{local:L about_maker}" HorizontalAlignment="Center" FontWeight="SemiBold"/>
+                    <TextBlock Text="{local:L about_claude}" Style="{StaticResource Caption}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
+                        <Button x:Name="AboutGitHubBtn" Style="{StaticResource SecondaryButton}" Content="{local:L about_github}" Click="AboutGitHub_Click" Margin="0,0,6,0"/>
+                        <Button x:Name="AboutShareBtn" Style="{StaticResource SecondaryButton}" Content="{local:L about_share}" Click="AboutShare_Click" Margin="0,0,6,0"/>
+                        <Button x:Name="AboutCloseBtn" Style="{StaticResource PrimaryButton}" Content="{local:L about_close}" Click="AboutClose_Click"/>
+                    </StackPanel>
+                    <TextBlock x:Name="AboutMsg" Style="{StaticResource Caption}" HorizontalAlignment="Center" Margin="0,10,0,0" MinHeight="18"/>
+                </StackPanel>
+            </Border>
+        </Border>
+
+        <!-- Güncelleme -->
+        <Border x:Name="UpdateOverlay" Grid.RowSpan="3" Background="{DynamicResource Scrim}" Visibility="Collapsed"
+                KeyboardNavigation.TabNavigation="Cycle">
+            <Border CornerRadius="20" Background="{DynamicResource Card}" Padding="30,28" Width="400"
+                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Border.Effect><DropShadowEffect BlurRadius="30" ShadowDepth="8" Opacity="0.45" Color="Black"/></Border.Effect>
+                <StackPanel>
+                    <TextBlock Style="{StaticResource Title}" FontSize="20" Text="{local:L update_title}"/>
+                    <TextBlock x:Name="UpdateText" Style="{StaticResource BodyMuted}" Margin="0,8,0,0"/>
+                    <Border x:Name="UpdateBarHost" Height="6" CornerRadius="3" Background="{DynamicResource Raised}" ClipToBounds="True"
+                            Margin="0,18,0,0" Visibility="Collapsed">
+                        <Border CornerRadius="3" Background="{DynamicResource Accent}" RenderTransformOrigin="0,0.5">
+                            <Border.RenderTransform><ScaleTransform x:Name="UpdateBarScale" ScaleX="0"/></Border.RenderTransform>
+                        </Border>
+                    </Border>
+                    <TextBlock x:Name="UpdateMsg" Style="{StaticResource Caption}" Margin="0,8,0,0" MinHeight="18"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
+                        <Button x:Name="UpdateLaterBtn" Style="{StaticResource SecondaryButton}" Content="{local:L update_later}" Click="UpdateLater_Click" Margin="0,0,8,0"/>
+                        <Button x:Name="UpdateNowBtn" Style="{StaticResource PrimaryButton}" Content="{local:L update_now}" Click="UpdateNow_Click"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Border>
+    </Grid>
+</Window>

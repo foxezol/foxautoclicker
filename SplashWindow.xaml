@@ -1,0 +1,39 @@
+<Window x:Class="FoxAutoClicker.SplashWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:FoxAutoClicker"
+        Title="FoxClicker" Width="380" Height="420" WindowStyle="None" AllowsTransparency="True"
+        Background="Transparent" ResizeMode="NoResize" WindowStartupLocation="CenterScreen"
+        ShowInTaskbar="False" Topmost="True" UseLayoutRounding="True"
+        Foreground="{DynamicResource Foreground}" FontFamily="{StaticResource UiFont}" FontSize="14">
+    <Border Margin="14" CornerRadius="24" Background="{DynamicResource Card}">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="24" ShadowDepth="6" Opacity="0.45" Color="Black"/>
+        </Border.Effect>
+        <Grid Margin="28,28,28,24">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,0,0,34">
+                <Rectangle Width="124" Height="192" Fill="{DynamicResource Accent}" HorizontalAlignment="Center">
+                    <Rectangle.OpacityMask>
+                        <ImageBrush ImageSource="pack://application:,,,/Assets/logo.png" Stretch="Uniform"/>
+                    </Rectangle.OpacityMask>
+                </Rectangle>
+                <TextBlock Text="FoxClicker" HorizontalAlignment="Center" Margin="0,18,0,0"
+                           FontFamily="{StaticResource DisplayFont}" FontSize="26" FontWeight="SemiBold"/>
+                <TextBlock Text="{local:L tagline}" Style="{StaticResource Caption}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+            </StackPanel>
+
+            <StackPanel VerticalAlignment="Bottom" Margin="12,0">
+                <Grid Margin="0,0,0,8">
+                    <TextBlock Style="{StaticResource Caption}" Text="{local:L loading}"/>
+                    <TextBlock x:Name="Percent" Style="{StaticResource Caption}" HorizontalAlignment="Right"
+                               FontFamily="{StaticResource NumFont}" Text="0%"/>
+                </Grid>
+                <Border Height="6" CornerRadius="3" Background="{DynamicResource Raised}" ClipToBounds="True">
+                    <Border x:Name="Fill" CornerRadius="3" Background="{DynamicResource Accent}" RenderTransformOrigin="0,0.5">
+                        <Border.RenderTransform><ScaleTransform x:Name="FillScale" ScaleX="0"/></Border.RenderTransform>
+                    </Border>
+                </Border>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

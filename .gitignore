@@ -1,0 +1,13 @@
+# build output
+bin/
+obj/
+publish/
+Releases/
+*.user
+.vs/
+
+# logo kaynak dosyaları (uygulamada kullanılan Assets/logo.png ve app.ico takip edilir)
+Assets/source/
+
+# yerel araç ayarları
+.claude/
