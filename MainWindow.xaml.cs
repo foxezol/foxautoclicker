@@ -142,15 +142,22 @@ public partial class MainWindow : Window
 
     DispatcherTimer? _holdTimer;
     readonly MouseHotkeyHook _mouseHook = new();
+    bool _hotkeyLatched;     // kısayol tuşu hâlâ basılı: tekrar eden basışlar yok sayılır
+    bool _holdStarted;       // "basılı tut" modunda bu basışla başladı: tuş bırakılınca durdur
 
     static bool IsMouseHotkey(int vk) => vk is 5 or 6;
 
     void OnHotkeyPressed()
     {
+        // Klavyede bir tuşu basılı tutunca işletim sistemi tekrar tekrar "basıldı" gönderir. Her biri aç/kapat sayılırsa
+        // tıklayıcı sürekli açılıp kapanır. Tuş bırakılana dek ilk basıştan sonrakileri yok say.
+        if (_hotkeyLatched) return;
+        _hotkeyLatched = true;
+
         var wasActive = _ctl.IsActive;
         Toggle(fromButton: false);
-        // "basılı tut" modunda: tuşla başladıysa, tuş bırakılınca durdur
-        if (_cfg.HotkeyHold && !wasActive && _ctl.IsActive) StartHoldWatch();
+        _holdStarted = _cfg.HotkeyHold && !wasActive && _ctl.IsActive;
+        StartHoldWatch();
     }
 
     void StartHoldWatch()
@@ -163,13 +170,18 @@ public partial class MainWindow : Window
 
     void HoldTick(object? sender, EventArgs e)
     {
-        if (!_ctl.IsActive) { _holdTimer?.Stop(); return; }
         var down = IsMouseHotkey(_cfg.HotkeyVk)
             ? _mouseHook.IsDown
             : (Native.GetAsyncKeyState(_cfg.HotkeyVk) & 0x8000) != 0;
         if (down) return;                                                    // hâlâ basılı
+
         _holdTimer?.Stop();
-        StopAll(finishedNaturally: false);
+        _hotkeyLatched = false;                                              // bırakıldı: yeni basış kabul edilir
+        if (_holdStarted)
+        {
+            _holdStarted = false;
+            if (_ctl.IsActive) StopAll(finishedNaturally: false);            // basılı tutma modunda bırakınca durdur
+        }
     }
 
     // ── başlık çubuğu ──
@@ -340,8 +352,6 @@ public partial class MainWindow : Window
         MbLeft.IsChecked = (m.Buttons & 1) != 0;
         MbMiddle.IsChecked = (m.Buttons & 2) != 0;
         MbRight.IsChecked = (m.Buttons & 4) != 0;
-        MbX1.IsChecked = (m.Buttons & 8) != 0;
-        MbX2.IsChecked = (m.Buttons & 16) != 0;
         TbPress.Text = m.PressMs.ToString();
         (m.Hold ? MtHold : m.Double ? MtDouble : MtSingle).IsChecked = true;
         (m.Fixed ? PosFixed : PosCursor).IsChecked = true;
@@ -382,8 +392,7 @@ public partial class MainWindow : Window
     {
         var m = _cfg.Mouse;
         m.Enabled = ChkMouse.IsChecked == true;
-        m.Buttons = (MbLeft.IsChecked == true ? 1 : 0) | (MbMiddle.IsChecked == true ? 2 : 0) | (MbRight.IsChecked == true ? 4 : 0)
-                    | (MbX1.IsChecked == true ? 8 : 0) | (MbX2.IsChecked == true ? 16 : 0);
+        m.Buttons = (MbLeft.IsChecked == true ? 1 : 0) | (MbMiddle.IsChecked == true ? 2 : 0) | (MbRight.IsChecked == true ? 4 : 0);
         m.Double = MtDouble.IsChecked == true;
         m.PressMs = Num(TbPress.Text, 1000);
         m.Hold = MtHold.IsChecked == true;

@@ -15,7 +15,7 @@ English · [Türkçe](README.tr.md)
 ## Features
 
 **Mouse**
-- Left, middle, right and the two side buttons (4 and 5): pick any combination and they are pressed together. Single click, double click or **hold**
+- Left, middle and right buttons: pick any combination and they are pressed together. Single click, double click or **hold**
 - Intervals from hours down to milliseconds, with **Fast / Normal / Slow** presets (50 ms, 250 ms, 1 s) or any custom value
 - Optional random jitter so the rhythm feels natural
 - Repeat until stopped, or a fixed number of times
@@ -95,10 +95,10 @@ To build the installer you also need [Inno Setup 6](https://jrsoftware.org/isinf
 
 ```powershell
 dotnet publish -c Release -r win-x64 --self-contained -p:PublishReadyToRun=true -o publish
-ISCC.exe /DMyAppVersion=0.3.6 installer\FoxClicker.iss     # Releases\FoxClicker-Setup-0.3.6.exe
+ISCC.exe /DMyAppVersion=0.3.7 installer\FoxClicker.iss     # Releases\FoxClicker-Setup-0.3.7.exe
 ```
 
-For the portable zip, zip the contents of `publish` as `FoxClicker-Portable-0.3.6.zip`. Attach both files to a GitHub release tagged `v0.3.6`; installed copies find the update through the release's `*Setup*.exe` asset.
+For the portable zip, zip the contents of `publish` as `FoxClicker-Portable-0.3.7.zip`. Attach both files to a GitHub release tagged `v0.3.7`; installed copies find the update through the release's `*Setup*.exe` asset.
 
 ## Credits
 

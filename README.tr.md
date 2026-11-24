@@ -15,7 +15,7 @@
 ## Özellikler
 
 **Fare**
-- Sol, orta, sağ ve iki yan düğme (4 ve 5): istediğiniz kombinasyonu seçin, birlikte basılır. Tek tık, çift tık ya da **basılı tutma**
+- Sol, orta ve sağ düğme: istediğiniz kombinasyonu seçin, birlikte basılır. Tek tık, çift tık ya da **basılı tutma**
 - Saatten milisaniyeye aralık; **Hızlı / Normal / Yavaş** ön ayarları (50 ms, 250 ms, 1 sn) ya da istediğiniz özel değer
 - Ritmi doğal göstermek için isteğe bağlı rastgele sapma
 - Durdurulana kadar ya da belirli sayıda tekrar
@@ -95,10 +95,10 @@ Yükleyiciyi derlemek için ayrıca [Inno Setup 6](https://jrsoftware.org/isinfo
 
 ```powershell
 dotnet publish -c Release -r win-x64 --self-contained -p:PublishReadyToRun=true -o publish
-ISCC.exe /DMyAppVersion=0.3.6 installer\FoxClicker.iss     # Releases\FoxClicker-Setup-0.3.6.exe
+ISCC.exe /DMyAppVersion=0.3.7 installer\FoxClicker.iss     # Releases\FoxClicker-Setup-0.3.7.exe
 ```
 
-Taşınabilir zip için `publish` klasörünün içeriğini `FoxClicker-Portable-0.3.6.zip` olarak sıkıştırın. İki dosyayı `v0.3.6` etiketli bir GitHub sürümüne ekleyin; kurulu kopyalar güncellemeyi sürümdeki `*Setup*.exe` dosyasından bulur.
+Taşınabilir zip için `publish` klasörünün içeriğini `FoxClicker-Portable-0.3.7.zip` olarak sıkıştırın. İki dosyayı `v0.3.7` etiketli bir GitHub sürümüne ekleyin; kurulu kopyalar güncellemeyi sürümdeki `*Setup*.exe` dosyasından bulur.
 
 ## Emeği geçenler
 
