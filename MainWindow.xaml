@@ -69,16 +69,18 @@
                         <Border x:Name="MouseButtonsPanel" Style="{StaticResource Panel}">
                             <StackPanel>
                                 <Grid>
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
                                     <StackPanel>
                                         <TextBlock Style="{StaticResource Caption}" Text="{local:L btn_label}" Margin="0,0,0,6"/>
-                                        <StackPanel Orientation="Horizontal">
-                                            <ToggleButton x:Name="MbLeft" Style="{StaticResource SegmentToggle}" Content="{local:L seg_left}" IsChecked="True"/>
-                                            <ToggleButton x:Name="MbMiddle" Style="{StaticResource SegmentToggle}" Content="{local:L seg_middle}"/>
-                                            <ToggleButton x:Name="MbRight" Style="{StaticResource SegmentToggle}" Content="{local:L seg_right}"/>
-                                        </StackPanel>
+                                        <WrapPanel>
+                                            <ToggleButton x:Name="MbLeft" Style="{StaticResource SegmentToggle}" Content="{local:L seg_left}" IsChecked="True" Margin="0,0,6,6"/>
+                                            <ToggleButton x:Name="MbMiddle" Style="{StaticResource SegmentToggle}" Content="{local:L seg_middle}" Margin="0,0,6,6"/>
+                                            <ToggleButton x:Name="MbRight" Style="{StaticResource SegmentToggle}" Content="{local:L seg_right}" Margin="0,0,6,6"/>
+                                            <ToggleButton x:Name="MbX1" Style="{StaticResource SegmentToggle}" Content="{local:L seg_x1}" ToolTip="{local:L seg_x1_tip}" Margin="0,0,6,6"/>
+                                            <ToggleButton x:Name="MbX2" Style="{StaticResource SegmentToggle}" Content="{local:L seg_x2}" ToolTip="{local:L seg_x2_tip}" Margin="0,0,6,6"/>
+                                        </WrapPanel>
                                     </StackPanel>
-                                    <StackPanel Grid.Column="2">
+                                    <StackPanel Grid.Row="1" Margin="0,10,0,0">
                                         <TextBlock Style="{StaticResource Caption}" Text="{local:L type_label}" Margin="0,0,0,6"/>
                                         <StackPanel Orientation="Horizontal">
                                             <RadioButton x:Name="MtSingle" Style="{StaticResource Segment}" GroupName="Mt" Content="{local:L seg_single}" IsChecked="True"/>

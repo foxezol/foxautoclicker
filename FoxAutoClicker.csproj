@@ -9,7 +9,7 @@
     <RootNamespace>FoxAutoClicker</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
-    <Version>0.3.4</Version>
+    <Version>0.3.5</Version>
     <Authors>foxezol</Authors>
     <Product>FoxClicker</Product>
     <Description>Simple auto clicker for mouse and keyboard</Description>

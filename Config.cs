@@ -131,8 +131,20 @@ public sealed class Config
 
 public static class KeyNames
 {
+    /// <summary>OEM tuşları (noktalama ve ulusal harfler): adı düzene göre değişir, enum adı yanıltıcıdır.</summary>
+    static bool IsOemKey(int vk) =>
+        (vk >= 0xBA && vk <= 0xC0) || (vk >= 0xDB && vk <= 0xDF) || vk == 0xE2;
+
     public static string Name(int vk)
     {
+        // Türkçe düzende ş, ğ, ü, i, ö, ç tuşları "; [ ] ' , ." gibi görünmesin: etkin düzenin gerçek harfini göster
+        if (IsOemKey(vk))
+        {
+            var ch = Native.KeyChar(vk);
+            if (ch > ' ')
+                return (char.IsLetter(ch) ? char.ToUpper(ch, System.Globalization.CultureInfo.GetCultureInfo("tr-TR")) : ch).ToString();
+        }
+
         var k = KeyInterop.KeyFromVirtualKey(vk);
         return k switch
         {

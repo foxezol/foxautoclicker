@@ -251,6 +251,8 @@ public partial class MainWindow : Window
         MbLeft.IsChecked = (m.Buttons & 1) != 0;
         MbMiddle.IsChecked = (m.Buttons & 2) != 0;
         MbRight.IsChecked = (m.Buttons & 4) != 0;
+        MbX1.IsChecked = (m.Buttons & 8) != 0;
+        MbX2.IsChecked = (m.Buttons & 16) != 0;
         (m.Hold ? MtHold : m.Double ? MtDouble : MtSingle).IsChecked = true;
         (m.Fixed ? PosFixed : PosCursor).IsChecked = true;
         TbX.Text = m.X.ToString();
@@ -289,7 +291,8 @@ public partial class MainWindow : Window
     {
         var m = _cfg.Mouse;
         m.Enabled = ChkMouse.IsChecked == true;
-        m.Buttons = (MbLeft.IsChecked == true ? 1 : 0) | (MbMiddle.IsChecked == true ? 2 : 0) | (MbRight.IsChecked == true ? 4 : 0);
+        m.Buttons = (MbLeft.IsChecked == true ? 1 : 0) | (MbMiddle.IsChecked == true ? 2 : 0) | (MbRight.IsChecked == true ? 4 : 0)
+                    | (MbX1.IsChecked == true ? 8 : 0) | (MbX2.IsChecked == true ? 16 : 0);
         m.Double = MtDouble.IsChecked == true;
         m.Hold = MtHold.IsChecked == true;
         m.Fixed = PosFixed.IsChecked == true;

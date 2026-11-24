@@ -73,11 +73,13 @@ public static class Native
     const uint KeyExtended = 0x1, KeyUp = 0x2, KeyScan = 0x8;
 
     /// <summary>mask: bit 0 sol, bit 1 orta, bit 2 sağ.</summary>
-    static IEnumerable<(uint Down, uint Up)> MaskFlags(int mask)
+    static IEnumerable<(uint Down, uint Up, uint Data)> MaskFlags(int mask)
     {
-        if ((mask & 1) != 0) yield return (0x0002, 0x0004);
-        if ((mask & 2) != 0) yield return (0x0020, 0x0040);
-        if ((mask & 4) != 0) yield return (0x0008, 0x0010);
+        if ((mask & 1) != 0) yield return (0x0002, 0x0004, 0);        // sol
+        if ((mask & 2) != 0) yield return (0x0020, 0x0040, 0);        // orta
+        if ((mask & 4) != 0) yield return (0x0008, 0x0010, 0);        // sağ
+        if ((mask & 8) != 0) yield return (0x0080, 0x0100, 1);        // yan düğme 4 (XBUTTON1, geri)
+        if ((mask & 16) != 0) yield return (0x0080, 0x0100, 2);       // yan düğme 5 (XBUTTON2, ileri)
     }
 
     /// <summary>Seçili tüm düğmelere aynı anda basıp bırakır; times kez.</summary>
@@ -88,19 +90,41 @@ public static class Native
         var list = new List<INPUT>();
         for (var i = 0; i < times; i++)
         {
-            foreach (var f in flags) list.Add(Mouse(f.Down));
-            foreach (var f in flags) list.Add(Mouse(f.Up));
+            foreach (var f in flags) list.Add(Mouse(f.Down, f.Data));
+            foreach (var f in flags) list.Add(Mouse(f.Up, f.Data));
         }
         SendInput((uint)list.Count, list.ToArray(), Marshal.SizeOf<INPUT>());
     }
 
     public static void MouseButtons(int mask, bool down)
     {
-        var list = MaskFlags(mask).Select(f => Mouse(down ? f.Down : f.Up)).ToArray();
+        var list = MaskFlags(mask).Select(f => Mouse(down ? f.Down : f.Up, f.Data)).ToArray();
         if (list.Length > 0) SendInput((uint)list.Length, list, Marshal.SizeOf<INPUT>());
     }
 
-    static INPUT Mouse(uint flags) => new() { type = InputMouse, U = new InputUnion { mi = new MOUSEINPUT { dwFlags = flags } } };
+    static INPUT Mouse(uint flags, uint data = 0) =>
+        new() { type = InputMouse, U = new InputUnion { mi = new MOUSEINPUT { dwFlags = flags, mouseData = data } } };
+
+    [DllImport("user32.dll")] static extern uint MapVirtualKeyEx(uint code, uint mapType, IntPtr layout);
+    [DllImport("user32.dll")] static extern IntPtr GetKeyboardLayout(uint threadId);
+
+    [DllImport("user32.dll")]
+    static extern int ToUnicodeEx(uint vk, uint scan, byte[] keyState,
+        [Out, MarshalAs(UnmanagedType.LPWStr, SizeConst = 8)] System.Text.StringBuilder buffer, int size, uint flags, IntPtr layout);
+
+    /// <summary>
+    /// Tuşun, o an etkin klavye düzenindeki (ör. Türkçe Q) harfi ya da simgesi (küçük harf); yoksa 0.
+    /// ToUnicodeEx gerçek Unicode verir (MapVirtualKey bazı düzenlerde ANSI kodu döndürür: ş yerine þ gibi).
+    /// 0x4 bayrağı: klavye durumunu (ölü tuş) değiştirme.
+    /// </summary>
+    public static char KeyChar(int vk)
+    {
+        var layout = GetKeyboardLayout(0);
+        var scan = MapVirtualKeyEx((uint)vk, 0, layout);
+        var buffer = new System.Text.StringBuilder(8);
+        var n = ToUnicodeEx((uint)vk, scan, new byte[256], buffer, buffer.Capacity, 0x4, layout);
+        return n != 0 && buffer.Length > 0 ? buffer[0] : '\0';
+    }
 
     static bool IsExtended(int vk) => vk is 0x21 or 0x22 or 0x23 or 0x24 or 0x25 or 0x26 or 0x27 or 0x28
         or 0x2C or 0x2D or 0x2E or 0x5B or 0x5C or 0x5D or 0x6F or 0x90 or 0xA3 or 0xA5;
