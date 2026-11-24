@@ -28,7 +28,7 @@ English · [Türkçe](README.tr.md)
 - Same interval and repeat options as the mouse
 
 **Everything else**
-- One global **start/stop hotkey** (F6 by default; the app asks you to confirm or change it on first launch) that works while another app is in front
+- One global **start/stop hotkey** (F6 by default; the app asks you to confirm or change it on first launch) that works while another app is in front. Choose *Press to toggle* or *Run while held* (it runs for as long as you hold the key). The hotkey can be a keyboard key or a **mouse side button (XButton1/XButton2)**
 - A visible **countdown** (with cancel) when you start from the button, so you can move the cursor first
 - **Start and stop sounds** in five styles (Soft, Click, Digital, Crystal, Pop) with a preview button and a volume slider, so you can hear that it is working
 - A guided **tour** for new users: it dims the screen, frames each part and explains it in a sentence. Restart it any time from Settings
@@ -95,14 +95,16 @@ To build the installer you also need [Inno Setup 6](https://jrsoftware.org/isinf
 
 ```powershell
 dotnet publish -c Release -r win-x64 --self-contained -p:PublishReadyToRun=true -o publish
-ISCC.exe /DMyAppVersion=0.3.5 installer\FoxClicker.iss     # Releases\FoxClicker-Setup-0.3.5.exe
+ISCC.exe /DMyAppVersion=0.3.6 installer\FoxClicker.iss     # Releases\FoxClicker-Setup-0.3.6.exe
 ```
 
-For the portable zip, zip the contents of `publish` as `FoxClicker-Portable-0.3.5.zip`. Attach both files to a GitHub release tagged `v0.3.5`; installed copies find the update through the release's `*Setup*.exe` asset.
+For the portable zip, zip the contents of `publish` as `FoxClicker-Portable-0.3.6.zip`. Attach both files to a GitHub release tagged `v0.3.6`; installed copies find the update through the release's `*Setup*.exe` asset.
 
 ## Credits
 
 Made by [foxezol](https://github.com/foxezol), built with Claude Code.
+
+Feedback and ideas are welcome on [Discord](https://discord.com/users/381533632852131841) or as a [GitHub issue](https://github.com/foxezol/foxautoclicker/issues).
 
 ## License
 

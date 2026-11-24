@@ -2,11 +2,15 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:FoxAutoClicker"
-        Title="FoxAutoClicker" Width="780" Height="700" MinWidth="740" MinHeight="620"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        Title="FoxAutoClicker" WindowStyle="None" Width="780" Height="700" MinWidth="740" MinHeight="620"
         WindowStartupLocation="CenterScreen" UseLayoutRounding="True"
         Icon="pack://application:,,,/Assets/app.ico"
         Background="{DynamicResource Background}" Foreground="{DynamicResource Foreground}"
         FontFamily="{StaticResource UiFont}" FontSize="14">
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="32" ResizeBorderThickness="6" GlassFrameThickness="1" CornerRadius="0" UseAeroCaptionButtons="False"/>
+    </shell:WindowChrome.WindowChrome>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -15,7 +19,7 @@
         </Grid.RowDefinitions>
 
         <!-- ═════════ Üst çubuk ═════════ -->
-        <Grid Margin="24,16,24,10">
+        <Grid Margin="24,34,24,10">
             <Button x:Name="BrandBtn" Style="{StaticResource BrandButton}" HorizontalAlignment="Left" VerticalAlignment="Center"
                     Click="Brand_Click" ToolTip="{local:L about}" AutomationProperties.Name="About FoxClicker">
                 <StackPanel Orientation="Horizontal">
@@ -46,6 +50,22 @@
             </StackPanel>
         </Grid>
 
+        <!-- ═════════ Başlık çubuğu: temaya uygun, kendi düğmelerimiz ═════════ -->
+        <Grid x:Name="TitleStrip" Grid.Row="0" Height="32" VerticalAlignment="Top" Background="Transparent">
+            <TextBlock Text="FoxAutoClicker" Style="{StaticResource Caption}" Margin="16,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                <Button Style="{StaticResource CaptionButton}" Click="Min_Click" ToolTip="{local:L win_minimize}" AutomationProperties.Name="Minimize">
+                    <Path Style="{StaticResource MiniIcon}" Width="14" Height="14" Data="M2 7 H12"/>
+                </Button>
+                <Button x:Name="MaxBtn" Style="{StaticResource CaptionButton}" Click="Max_Click" ToolTip="{local:L win_maximize}" AutomationProperties.Name="Maximize">
+                    <Path x:Name="MaxIcon" Style="{StaticResource MiniIcon}" Width="14" Height="14" Data="M2.5 2.5 H11.5 V11.5 H2.5 Z"/>
+                </Button>
+                <Button Style="{StaticResource CaptionCloseButton}" Click="Close_Click" ToolTip="{local:L win_close}" AutomationProperties.Name="Close">
+                    <Path Style="{StaticResource MiniIcon}" Width="14" Height="14" Data="M2.5 2.5 L11.5 11.5 M11.5 2.5 L2.5 11.5"/>
+                </Button>
+            </StackPanel>
+        </Grid>
+
         <!-- ═════════ Sayfalar ═════════ -->
         <Grid Grid.Row="1">
 
@@ -69,7 +89,7 @@
                         <Border x:Name="MouseButtonsPanel" Style="{StaticResource Panel}">
                             <StackPanel>
                                 <Grid>
-                                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
                                     <StackPanel>
                                         <TextBlock Style="{StaticResource Caption}" Text="{local:L btn_label}" Margin="0,0,0,6"/>
                                         <WrapPanel>
@@ -87,6 +107,14 @@
                                             <RadioButton x:Name="MtDouble" Style="{StaticResource Segment}" GroupName="Mt" Content="{local:L seg_double}"/>
                                             <RadioButton x:Name="MtHold" Style="{StaticResource Segment}" GroupName="Mt" Content="{local:L seg_hold}"/>
                                         </StackPanel>
+                                    </StackPanel>
+                                    <StackPanel x:Name="PressPanel" Grid.Row="2" Margin="0,14,0,0">
+                                        <TextBlock Style="{StaticResource Caption}" Text="{local:L press_label}" Margin="0,0,0,6"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBox x:Name="TbPress" Width="80" Text="20" MaxLength="4" PreviewTextInput="Digits" HorizontalContentAlignment="Center"/>
+                                            <TextBlock Text="ms" Style="{StaticResource BodyMuted}" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                        </StackPanel>
+                                        <TextBlock Style="{StaticResource Caption}" Margin="0,8,0,0" Text="{local:L press_note}"/>
                                     </StackPanel>
                                 </Grid>
                                 <TextBlock x:Name="MouseHoldNote" Style="{StaticResource Caption}" Margin="0,10,0,0" Visibility="Collapsed"
@@ -367,6 +395,12 @@
                                 <Button x:Name="HotkeyBtn" Style="{StaticResource SecondaryButton}" Content="{local:L hotkey_change}" Margin="8,0,0,0" Click="HotkeyChange_Click"/>
                             </StackPanel>
                             <TextBlock Style="{StaticResource Caption}" Margin="0,8,0,0" Text="{local:L hotkey_desc}"/>
+                            <TextBlock Style="{StaticResource Caption}" Margin="0,16,0,6" Text="{local:L hotkey_mode}"/>
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton x:Name="HkToggle" Style="{StaticResource Segment}" GroupName="Hk" Content="{local:L hotkey_mode_toggle}" IsChecked="True"/>
+                                <RadioButton x:Name="HkHold" Style="{StaticResource Segment}" GroupName="Hk" Content="{local:L hotkey_mode_hold}"/>
+                            </StackPanel>
+                            <TextBlock Style="{StaticResource Caption}" Margin="0,8,0,0" Text="{local:L hotkey_mode_note}"/>
                             <Grid Margin="0,16,0,0">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                 <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
@@ -572,7 +606,9 @@
                     <Border Style="{StaticResource Hairline}" Margin="0,18"/>
                     <TextBlock Text="{local:L about_maker}" HorizontalAlignment="Center" FontWeight="SemiBold"/>
                     <TextBlock Text="{local:L about_claude}" Style="{StaticResource Caption}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
+                    <Button x:Name="AboutDiscordBtn" Style="{StaticResource GhostButton}" HorizontalAlignment="Center" Margin="0,10,0,0"
+                            Content="{local:L about_feedback}" Click="AboutDiscord_Click"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,12,0,0">
                         <Button x:Name="AboutGitHubBtn" Style="{StaticResource SecondaryButton}" Content="{local:L about_github}" Click="AboutGitHub_Click" Margin="0,0,6,0"/>
                         <Button x:Name="AboutShareBtn" Style="{StaticResource SecondaryButton}" Content="{local:L about_share}" Click="AboutShare_Click" Margin="0,0,6,0"/>
                         <Button x:Name="AboutCloseBtn" Style="{StaticResource PrimaryButton}" Content="{local:L about_close}" Click="AboutClose_Click"/>

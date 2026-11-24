@@ -27,6 +27,7 @@ public static class Native
 
     [DllImport("user32.dll", SetLastError = true)] static extern uint SendInput(uint n, INPUT[] inputs, int size);
     [DllImport("user32.dll")] public static extern bool SetCursorPos(int x, int y);
+    [DllImport("user32.dll")] public static extern short GetAsyncKeyState(int vk);
     [DllImport("user32.dll")] public static extern bool GetCursorPos(out POINT p);
     [DllImport("user32.dll")] static extern uint MapVirtualKey(uint code, uint mapType);
     [DllImport("user32.dll")] public static extern bool RegisterHotKey(IntPtr hWnd, int id, uint mods, uint vk);
@@ -83,17 +84,21 @@ public static class Native
     }
 
     /// <summary>Seçili tüm düğmelere aynı anda basıp bırakır; times kez.</summary>
-    public static void MouseClick(int mask, int times)
+    /// <param name="pressMs">Düğmelerin basılı kalma süresi. Çok kısa basışları (≈1 ms) bazı oyunlar ve uygulamalar görmez.</param>
+    public static void MouseClick(int mask, int times, int pressMs = 0)
     {
         var flags = MaskFlags(mask).ToArray();
         if (flags.Length == 0) return;
-        var list = new List<INPUT>();
+        var size = Marshal.SizeOf<INPUT>();
         for (var i = 0; i < times; i++)
         {
-            foreach (var f in flags) list.Add(Mouse(f.Down, f.Data));
-            foreach (var f in flags) list.Add(Mouse(f.Up, f.Data));
+            var downs = flags.Select(f => Mouse(f.Down, f.Data)).ToArray();
+            var ups = flags.Select(f => Mouse(f.Up, f.Data)).ToArray();
+            SendInput((uint)downs.Length, downs, size);
+            if (pressMs > 0) Thread.Sleep(pressMs);
+            SendInput((uint)ups.Length, ups, size);
+            if (pressMs > 0 && i < times - 1) Thread.Sleep(pressMs);     // çift tıkta iki basış arası
         }
-        SendInput((uint)list.Count, list.ToArray(), Marshal.SizeOf<INPUT>());
     }
 
     public static void MouseButtons(int mask, bool down)
@@ -263,7 +268,7 @@ public sealed class ClickController
                 _mouse = new Runner(() =>
                 {
                     if (m.Fixed) Native.SetCursorPos(m.X, m.Y);
-                    Native.MouseClick(m.Buttons, clicks);
+                    Native.MouseClick(m.Buttons, clicks, m.PressMs);
                 }, t.NextDelay, t.Limit ? Math.Max(1, t.Count) : 0);
                 _mouse.Completed += OnRunnerDone;
                 _active++;

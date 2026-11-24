@@ -39,6 +39,7 @@ public sealed class MouseConfig
 {
     public bool Enabled { get; set; } = true;
     public int Button { get; set; }          // eski ayar (0 sol, 1 orta, 2 sağ); Buttons'a taşınır
+    public int PressMs { get; set; } = 20;   // düğmenin basılı kalma süresi (ms)
     public int Buttons { get; set; } = 1;    // bit 0 sol, bit 1 orta, bit 2 sağ: birden fazlası aynı anda basılır
     public bool Double { get; set; }
     public bool Hold { get; set; }
@@ -80,6 +81,7 @@ public sealed class Config
     public string Accent { get; set; } = Theme.DefaultAccent;
     public int HotkeyVk { get; set; } = 0x75; // F6
     public int HotkeyMods { get; set; }
+    public bool HotkeyHold { get; set; }     // true: kısayol basılı tutuldukça çalışır, bırakınca durur
     public int ButtonDelaySec { get; set; } = 3;
     public MouseConfig Mouse { get; set; } = new();
     public KeyConfig Key { get; set; } = new();
@@ -137,6 +139,9 @@ public static class KeyNames
 
     public static string Name(int vk)
     {
+        if (vk == 5) return "XButton1";      // fare yan düğmeleri kısayol olarak seçilebilir
+        if (vk == 6) return "XButton2";
+
         // Türkçe düzende ş, ğ, ü, i, ö, ç tuşları "; [ ] ' , ." gibi görünmesin: etkin düzenin gerçek harfini göster
         if (IsOemKey(vk))
         {

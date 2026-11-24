@@ -28,7 +28,7 @@
 - Fareyle aynı aralık ve tekrar seçenekleri
 
 **Diğerleri**
-- Başka bir uygulamadayken de çalışan tek bir **başlat/durdur kısayolu** (varsayılan F6; ilk açılışta uygulama onaylamanızı ya da değiştirmenizi ister)
+- Başka bir uygulamadayken de çalışan tek bir **başlat/durdur kısayolu** (varsayılan F6; ilk açılışta uygulama onaylamanızı ya da değiştirmenizi ister). *Bas, aç/kapat* ya da *Basılı tuttukça çalışsın* seçilebilir (tuşu tuttuğunuz sürece çalışır). Kısayol bir klavye tuşu ya da **fare yan düğmesi (XButton1/XButton2)** olabilir
 - Düğmeyle başlatırken, imleci hedefe götürebilmeniz için görünür bir **geri sayım** (iptal edilebilir)
 - Beş stilde **başlat ve durdur sesi** (Yumuşak, Klik, Dijital, Kristal, Pop); önizleme düğmesi ve ses düzeyi kaydırıcısıyla. Çalıştığını kulaktan anlarsınız
 - Yeni kullanıcılar için yönlendirmeli **tur**: ekranı karartır, her bölümü çerçeveler ve bir cümleyle anlatır. İstediğiniz zaman Ayarlar'dan yeniden başlatabilirsiniz
@@ -95,14 +95,16 @@ Yükleyiciyi derlemek için ayrıca [Inno Setup 6](https://jrsoftware.org/isinfo
 
 ```powershell
 dotnet publish -c Release -r win-x64 --self-contained -p:PublishReadyToRun=true -o publish
-ISCC.exe /DMyAppVersion=0.3.5 installer\FoxClicker.iss     # Releases\FoxClicker-Setup-0.3.5.exe
+ISCC.exe /DMyAppVersion=0.3.6 installer\FoxClicker.iss     # Releases\FoxClicker-Setup-0.3.6.exe
 ```
 
-Taşınabilir zip için `publish` klasörünün içeriğini `FoxClicker-Portable-0.3.5.zip` olarak sıkıştırın. İki dosyayı `v0.3.5` etiketli bir GitHub sürümüne ekleyin; kurulu kopyalar güncellemeyi sürümdeki `*Setup*.exe` dosyasından bulur.
+Taşınabilir zip için `publish` klasörünün içeriğini `FoxClicker-Portable-0.3.6.zip` olarak sıkıştırın. İki dosyayı `v0.3.6` etiketli bir GitHub sürümüne ekleyin; kurulu kopyalar güncellemeyi sürümdeki `*Setup*.exe` dosyasından bulur.
 
 ## Emeği geçenler
 
 [foxezol](https://github.com/foxezol) tarafından yapıldı, Claude Code ile geliştirildi.
+
+Geri bildirim ve fikirler için [Discord](https://discord.com/users/381533632852131841) ya da [GitHub issue](https://github.com/foxezol/foxautoclicker/issues).
 
 ## Lisans
 

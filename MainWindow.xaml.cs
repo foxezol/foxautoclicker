@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Runtime.InteropServices;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
@@ -85,6 +86,8 @@ public partial class MainWindow : Window
         };
         Closed += (_, _) => Application.Current.Shutdown();
 
+        StateChanged += (_, _) => UpdateMaxIcon();
+        _mouseHook.Pressed += () => Dispatcher.BeginInvoke(OnHotkeyPressed);   // kanca geri çağrısını hızlı bırak
         _ready = true;
         ApplySoundConfig();
         UpdateIcon();
@@ -124,20 +127,106 @@ public partial class MainWindow : Window
     {
         if (msg == WmHotkey && wParam.ToInt32() == HotkeyId)
         {
-            Toggle(fromButton: false);
+            OnHotkeyPressed();
+            handled = true;
+        }
+        else if (msg == WmGetMinMaxInfo)
+        {
+            FitToWorkArea(hwnd, lParam);                // başlıksız pencere büyütülünce görev çubuğunu örtmesin
             handled = true;
         }
         return IntPtr.Zero;
     }
 
+    // ── kısayol: aç/kapat ya da basılı tutuldukça çalış ──
+
+    DispatcherTimer? _holdTimer;
+    readonly MouseHotkeyHook _mouseHook = new();
+
+    static bool IsMouseHotkey(int vk) => vk is 5 or 6;
+
+    void OnHotkeyPressed()
+    {
+        var wasActive = _ctl.IsActive;
+        Toggle(fromButton: false);
+        // "basılı tut" modunda: tuşla başladıysa, tuş bırakılınca durdur
+        if (_cfg.HotkeyHold && !wasActive && _ctl.IsActive) StartHoldWatch();
+    }
+
+    void StartHoldWatch()
+    {
+        _holdTimer ??= new DispatcherTimer(DispatcherPriority.Send) { Interval = TimeSpan.FromMilliseconds(15) };
+        _holdTimer.Tick -= HoldTick;
+        _holdTimer.Tick += HoldTick;
+        _holdTimer.Start();
+    }
+
+    void HoldTick(object? sender, EventArgs e)
+    {
+        if (!_ctl.IsActive) { _holdTimer?.Stop(); return; }
+        var down = IsMouseHotkey(_cfg.HotkeyVk)
+            ? _mouseHook.IsDown
+            : (Native.GetAsyncKeyState(_cfg.HotkeyVk) & 0x8000) != 0;
+        if (down) return;                                                    // hâlâ basılı
+        _holdTimer?.Stop();
+        StopAll(finishedNaturally: false);
+    }
+
+    // ── başlık çubuğu ──
+
+    const int WmGetMinMaxInfo = 0x0024;
+
+    [StructLayout(LayoutKind.Sequential)] struct PointI { public int X, Y; }
+    [StructLayout(LayoutKind.Sequential)] struct MinMaxInfo { public PointI Reserved, MaxSize, MaxPosition, MinTrackSize, MaxTrackSize; }
+    [StructLayout(LayoutKind.Sequential)] struct RectI { public int Left, Top, Right, Bottom; }
+    [StructLayout(LayoutKind.Sequential)] struct MonitorInfo { public int Size; public RectI Monitor, Work; public int Flags; }
+    [DllImport("user32.dll")] static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint flags);
+    [DllImport("user32.dll")] static extern bool GetMonitorInfo(IntPtr monitor, ref MonitorInfo info);
+
+    /// <summary>Büyütülmüş pencere, bulunduğu monitörün çalışma alanını (görev çubuğu hariç) kaplar; en küçük boyut korunur.</summary>
+    void FitToWorkArea(IntPtr hwnd, IntPtr lParam)
+    {
+        var mmi = Marshal.PtrToStructure<MinMaxInfo>(lParam);
+        var monitor = MonitorFromWindow(hwnd, 2);           // MONITOR_DEFAULTTONEAREST
+        var info = new MonitorInfo { Size = Marshal.SizeOf<MonitorInfo>() };
+        if (monitor != IntPtr.Zero && GetMonitorInfo(monitor, ref info))
+        {
+            mmi.MaxPosition = new PointI { X = info.Work.Left - info.Monitor.Left, Y = info.Work.Top - info.Monitor.Top };
+            mmi.MaxSize = new PointI { X = info.Work.Right - info.Work.Left, Y = info.Work.Bottom - info.Work.Top };
+        }
+        var dpi = VisualTreeHelper.GetDpi(this);
+        mmi.MinTrackSize = new PointI { X = (int)(MinWidth * dpi.DpiScaleX), Y = (int)(MinHeight * dpi.DpiScaleY) };
+        Marshal.StructureToPtr(mmi, lParam, true);
+    }
+
+    void Min_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
+    void Max_Click(object sender, RoutedEventArgs e) =>
+        WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+    void Close_Click(object sender, RoutedEventArgs e) => Close();
+
+    void UpdateMaxIcon()
+    {
+        var maximized = WindowState == WindowState.Maximized;
+        MaxIcon.Data = Geometry.Parse(maximized ? "M4.5 2.5 H11.5 V9.5 M2.5 4.5 H9.5 V11.5 H2.5 Z" : "M2.5 2.5 H11.5 V11.5 H2.5 Z");
+        MaxBtn.ToolTip = Loc.T(maximized ? "win_restore" : "win_maximize");
+    }
+
     void RegisterHotkey()
     {
         if (_src == null) return;
+        if (IsMouseHotkey(_cfg.HotkeyVk))
+        {
+            _mouseHook.SetTarget(_cfg.HotkeyVk);   // fare yan düğmesi: RegisterHotKey yerine fare kancası
+            _hotkeyOk = true;
+            return;
+        }
+        _mouseHook.SetTarget(0);
         _hotkeyOk = Native.RegisterHotKey(_src.Handle, HotkeyId, (uint)_cfg.HotkeyMods | 0x4000, (uint)_cfg.HotkeyVk);
     }
 
     void UnregisterHotkey()
     {
+        _mouseHook.SetTarget(0);
         if (_src != null) Native.UnregisterHotKey(_src.Handle, HotkeyId);
     }
 
@@ -253,6 +342,7 @@ public partial class MainWindow : Window
         MbRight.IsChecked = (m.Buttons & 4) != 0;
         MbX1.IsChecked = (m.Buttons & 8) != 0;
         MbX2.IsChecked = (m.Buttons & 16) != 0;
+        TbPress.Text = m.PressMs.ToString();
         (m.Hold ? MtHold : m.Double ? MtDouble : MtSingle).IsChecked = true;
         (m.Fixed ? PosFixed : PosCursor).IsChecked = true;
         TbX.Text = m.X.ToString();
@@ -280,6 +370,7 @@ public partial class MainWindow : Window
         HotkeyChip.Text = HotkeyText;
         ChkAutoUpdate.IsChecked = _cfg.AutoUpdateCheck;
         ChkSounds.IsChecked = _cfg.Sounds;
+        (_cfg.HotkeyHold ? HkHold : HkToggle).IsChecked = true;
         SoundRadio(_cfg.SoundVariant).IsChecked = true;
         SoundVolume.Value = _cfg.SoundVolume;
         SoundVolumeText.Text = $"{_cfg.SoundVolume}%";
@@ -294,6 +385,7 @@ public partial class MainWindow : Window
         m.Buttons = (MbLeft.IsChecked == true ? 1 : 0) | (MbMiddle.IsChecked == true ? 2 : 0) | (MbRight.IsChecked == true ? 4 : 0)
                     | (MbX1.IsChecked == true ? 8 : 0) | (MbX2.IsChecked == true ? 16 : 0);
         m.Double = MtDouble.IsChecked == true;
+        m.PressMs = Num(TbPress.Text, 1000);
         m.Hold = MtHold.IsChecked == true;
         m.Fixed = PosFixed.IsChecked == true;
         m.X = Num(TbX.Text, 99999);
@@ -307,6 +399,7 @@ public partial class MainWindow : Window
         _cfg.ButtonDelaySec = Num(TbDelay.Text, 30);
         _cfg.AutoUpdateCheck = ChkAutoUpdate.IsChecked == true;
         _cfg.Sounds = ChkSounds.IsChecked == true;
+        _cfg.HotkeyHold = HkHold.IsChecked == true;
         _cfg.SoundVolume = (int)SoundVolume.Value;
         _cfg.SoundVariant = SndClick.IsChecked == true ? 1 : SndDigital.IsChecked == true ? 2 : SndCrystal.IsChecked == true ? 3 : SndPop.IsChecked == true ? 4 : 0;
         ApplySoundConfig();
@@ -395,6 +488,7 @@ public partial class MainWindow : Window
 
         MouseTiming.Visibility = _cfg.Mouse.Hold ? Visibility.Collapsed : Visibility.Visible;
         MouseHoldNote.Visibility = _cfg.Mouse.Hold ? Visibility.Visible : Visibility.Collapsed;
+        PressPanel.Visibility = _cfg.Mouse.Hold ? Visibility.Collapsed : Visibility.Visible;   // basılı tutmada süre anlamsız
         KeyTiming.Visibility = _cfg.Key.Hold ? Visibility.Collapsed : Visibility.Visible;
 
         // klavye: kayıt durumu, boş durum, akış açıklaması
@@ -488,11 +582,16 @@ public partial class MainWindow : Window
     void Card_MouseDown(object sender, MouseButtonEventArgs e) => e.Handled = true;   // kart içi tık katmanı kapatmasın
     void AboutClose_Click(object sender, RoutedEventArgs e) => HideOverlay(AboutOverlay, AboutCard);
 
-    void AboutGitHub_Click(object sender, RoutedEventArgs e)
+    const string DiscordUrl = "https://discord.com/users/381533632852131841";
+
+    static void OpenUrl(string url)
     {
-        try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(UpdateService.RepoUrl) { UseShellExecute = true }); }
+        try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true }); }
         catch { /* tarayıcı açılamazsa sessizce geç */ }
     }
+
+    void AboutGitHub_Click(object sender, RoutedEventArgs e) => OpenUrl(UpdateService.RepoUrl);
+    void AboutDiscord_Click(object sender, RoutedEventArgs e) => OpenUrl(DiscordUrl);
 
     void AboutShare_Click(object sender, RoutedEventArgs e)
     {
@@ -709,7 +808,7 @@ public partial class MainWindow : Window
             _cfg.HotkeyVk = vk;
             _cfg.HotkeyMods = (int)mods;
             return true;
-        });
+        }, MouseHotkeyCapture);
     }
 
     async void HotkeyOk_Click(object sender, RoutedEventArgs e)
@@ -803,6 +902,7 @@ public partial class MainWindow : Window
         _cfg.Accent = fresh.Accent;
         _cfg.HotkeyVk = fresh.HotkeyVk;
         _cfg.HotkeyMods = fresh.HotkeyMods;
+        _cfg.HotkeyHold = fresh.HotkeyHold;
         _cfg.ButtonDelaySec = fresh.ButtonDelaySec;
         _cfg.AutoUpdateCheck = fresh.AutoUpdateCheck;
         _cfg.Sounds = fresh.Sounds;
@@ -966,10 +1066,13 @@ public partial class MainWindow : Window
 
     // ───────────────────────── Tuş yakalama ve kayıt ─────────────────────────
 
-    void BeginCapture(Button btn, string promptKey, Func<Key, ModifierKeys, bool> onKey)
+    Func<int, bool>? _captureMouse;
+
+    void BeginCapture(Button btn, string promptKey, Func<Key, ModifierKeys, bool> onKey, Func<int, bool>? onMouse = null)
     {
         EndCapture();
         UnregisterHotkey();
+        _captureMouse = onMouse;
         _capture = onKey;
         _captureBtn = btn;
         _capturePrompt = promptKey;
@@ -981,9 +1084,30 @@ public partial class MainWindow : Window
     {
         if (_capture == null) return;
         _capture = null;
+        _captureMouse = null;
         _captureBtn = null;
+        _cfg.Save();                       // seçilen kısayol hemen kaydedilsin
         RegisterHotkey();
         Refresh();
+    }
+
+    /// <summary>Kısayol yakalanırken fare yan düğmesine basılırsa o düğme kısayol olur.</summary>
+    protected override void OnPreviewMouseDown(MouseButtonEventArgs e)
+    {
+        if (_captureMouse != null && e.ChangedButton is MouseButton.XButton1 or MouseButton.XButton2)
+        {
+            e.Handled = true;
+            if (_captureMouse(e.ChangedButton == MouseButton.XButton1 ? 5 : 6)) EndCapture();
+            return;
+        }
+        base.OnPreviewMouseDown(e);
+    }
+
+    bool MouseHotkeyCapture(int vk)
+    {
+        _cfg.HotkeyVk = vk;
+        _cfg.HotkeyMods = 0;
+        return true;
     }
 
     protected override void OnPreviewKeyDown(KeyEventArgs e)
@@ -1117,7 +1241,7 @@ public partial class MainWindow : Window
             _cfg.HotkeyVk = vk;
             _cfg.HotkeyMods = (int)mods;
             return true;
-        });
+        }, MouseHotkeyCapture);
     }
 
     // ───────────────────────── Profiller ─────────────────────────
